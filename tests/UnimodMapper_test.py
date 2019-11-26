@@ -6,14 +6,7 @@ import sys
 import pytest
 
 # this block is not needed anymore, when we have a proper packages
-sys.path.append(
-    os.path.abspath(
-        os.path.join(
-            os.path.dirname(__file__), 
-            os.pardir, 
-        )
-    )
-)
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir,)))
 # EOBlock
 import unimod_mapper
 
@@ -182,5 +175,3 @@ class TestXMLIntegrity:
         #         with self.assertRaises(SystemExit) as system_exit_check:
         #             self.alt_mapper._parseXML()
         #         self.assertEqual(system_exit_check.exception.code, 1)
-
-

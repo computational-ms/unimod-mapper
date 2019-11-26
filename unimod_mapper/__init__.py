@@ -1,1 +1,1 @@
-from . unimod_mapper import UnimodMapper
+from .unimod_mapper import UnimodMapper
