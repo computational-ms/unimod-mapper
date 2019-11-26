@@ -5,8 +5,8 @@ import sys
 
 import pytest
 
-# this block is not needed anymore, when we have a proper packages
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir,)))
+# this block is not needed anymore, when we have a proper package
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
 # EOBlock
 import unimod_mapper
 
@@ -137,39 +137,6 @@ class TestXMLIntegrity:
             assert case["out"] == conversion["function"](
                 *case["in"].get("args", []), **case["in"].get("kwargs", {})
             )
-
-        # def test_set_integirty_test():
-        #     for test_id, list_of_test in enumerate(TESTS):
-        #         yield input_list_check, list_of_test
-        #
-        # >>> I dont get this this ...
-        #
-        # def input_list_check(list_of_test):
-        #     """
-        #     Checks that the number of tests can actually be zipped
-        #     with the unimodMapper functions
-        #     """
-        #     assert len(list_of_test) <= len(UNIMODMAPPER_FUNCTIONS)
-
-        # def unimodMapper_conversion_test():
-        #     for test_id, list_of_test in enumerate(TESTS):
-        #         test_function_association = zip(list_of_test, UNIMODMAPPER_FUNCTIONS)
-        #         for test_dict, mapper_function in test_function_association:
-        #             if "kwargs" not in test_dict["in"].keys():
-        #                 test_dict["in"]["kwargs"] = {}
-        #             yield mapper_function_check, test_dict, mapper_function
-
-        # def mapper_function_check(test_dict, mapper_function):
-        #     mapper_output = mapper_function(
-        #         *test_dict["in"]["args"], **test_dict["in"]["kwargs"]
-        #     )
-        #     print(mapper_output, test_dict["out"])
-        #     assert mapper_output == test_dict["out"]
-
-        # class TestResults(unittest.TestCase):
-        #     def setUp(self):
-        #         self.alt_mapper = pyqms.UnimodMapper()
-        #         self.alt_mapper.unimod_xml_name = "wrong_unimod_xml_name.xml"
 
         #     def crash_test(self):
         #         with self.assertRaises(SystemExit) as system_exit_check:
