@@ -1,8 +1,22 @@
 #!/usr/bin/env python
 # encoding: utf-8
+import os
+import sys
 
-import unimod_mapper
 import pytest
+
+# this block is not needed anymore, when we have a proper packages
+sys.path.append(
+    os.path.abspath(
+        os.path.join(
+            os.path.dirname(__file__), 
+            os.pardir, 
+        )
+    )
+)
+# EOBlock
+import unimod_mapper
+
 
 M = unimod_mapper.UnimodMapper()
 
