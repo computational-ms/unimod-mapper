@@ -27,7 +27,7 @@ setup(
     python_requires=">=3.7.0",
     build_requires=[],
     install_requires=requirements,
-    long_description="Unimod Mapper",
+    long_description="Unimod Mapper for Proteomics Tools",
     author="Christian Fufezan, Manuel Köster, Johannes Leufken, Stefan Schulze",
     author_email="ursgal.team@gmail.com",
     url="https://github.com/computational-ms/unimod-mapper",
@@ -49,6 +49,7 @@ setup(
         "Topic :: Scientific/Engineering :: Bio-Informatics",
         "Topic :: Scientific/Engineering :: Chemistry",
         "Topic :: Scientific/Engineering :: Medical Science Apps.",
+        "Topic :: Scientific/Engineering :: Education",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
 )
