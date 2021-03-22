@@ -36,7 +36,6 @@ setup(
     classifiers=[
         "Development Status :: 4 - Beta",
         "Environment :: Console",
-        "Intended Audience :: Education",
         "Intended Audience :: Science/Research",
         "Intended Audience :: Developers",
         "Operating System :: MacOS :: MacOS X",
@@ -49,7 +48,6 @@ setup(
         "Topic :: Scientific/Engineering :: Bio-Informatics",
         "Topic :: Scientific/Engineering :: Chemistry",
         "Topic :: Scientific/Engineering :: Medical Science Apps.",
-        "Topic :: Scientific/Engineering :: Education",
         "Topic :: Software Development :: Libraries :: Python Modules",
     ],
 )
