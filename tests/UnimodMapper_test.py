@@ -31,17 +31,33 @@ CONVERSIONS = [
         "function": M.name2id,
         "cases": [{"in": {"args": ["ICAT-G:2H(8)"]}, "out": "9"}],  #
     },
-    {"function": M.id2mass, "cases": [{"in": {"args": ["9"]}, "out": 494.30142}]},  #
+    {
+        "function": M.id2mass,
+        "cases": [
+            {"in": {"args": ["9"]}, "out": 494.30142},
+            {"in": {"args": [9]}, "out": 494.30142},
+        ],
+    },  #
     {
         "function": M.id2composition,
         "cases": [
             {
                 "in": {"args": ["9"]},
                 "out": {"N": 4, "S": 1, "2H": 8, "O": 6, "C": 22, "H": 30},
-            }  #
+            },
+            {
+                "in": {"args": [9]},
+                "out": {"N": 4, "S": 1, "2H": 8, "O": 6, "C": 22, "H": 30},
+            },  #
         ],
     },
-    {"function": M.id2name, "cases": [{"in": {"args": "9"}, "out": "ICAT-G:2H(8)"}]},  #
+    {
+        "function": M.id2name,
+        "cases": [
+            {"in": {"args": ["9"]}, "out": "ICAT-G:2H(8)"},
+            {"in": {"args": [9]}, "out": "ICAT-G:2H(8)"},
+        ],
+    },  #
     {
         "function": M.mass2name_list,
         "cases": [{"in": {"args": [494.30142]}, "out": ["ICAT-G:2H(8)"]}],  #
