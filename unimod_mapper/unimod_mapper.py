@@ -462,7 +462,10 @@ class UnimodMapper(object):
     def _map_key_2_index_2_value(self, map_key, return_key):
         index = self.mapper.get(map_key, None)
         if index is None:
-            print("Cant map", map_key, file=sys.stderr)
+            print(
+                "Cannot map {0} while trying to return {1}".format(map_key, return_key),
+                file=sys.stderr,
+            )
             return_value = None
         else:
             return_value = self._data_list_2_value(index, return_key)
