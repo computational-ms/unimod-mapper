@@ -124,8 +124,7 @@ class UnimodMapper(object):
         return data_list
 
     def _initialize_mapper(self):
-        """Set up the mapper and generate the index dict
-        """
+        """Set up the mapper and generate the index dict"""
         mapper = {}
         for index, unimod_data_dict in enumerate(self.data_list):
             for key, value in unimod_data_dict.items():
@@ -215,11 +214,13 @@ class UnimodMapper(object):
         Converts unimod ID to unimod mass
 
         Args:
-            unimod_id (int): identifier of modification
+            unimod_id (int|str): identifier of modification
 
         Returns:
             float: Unimod mono isotopic mass
         """
+        if isinstance(unimod_id, int) is True:
+            unimod_id = str(unimod_id)
         return self._map_key_2_index_2_value(unimod_id, "mono_mass")
 
     def id2composition(self, unimod_id):
@@ -227,11 +228,13 @@ class UnimodMapper(object):
         Converts unimod ID to unimod composition
 
         Args:
-            unimod_id (int): identifier of modification
+            unimod_id (int|str): identifier of modification
 
         Returns:
             dict: Unimod elemental composition
         """
+        if isinstance(unimod_id, int) is True:
+            unimod_id = str(unimod_id)
         return self._map_key_2_index_2_value(unimod_id, "element")
 
     def id2name(self, unimod_id):
@@ -239,11 +242,13 @@ class UnimodMapper(object):
         Converts unimod ID to unimod name
 
         Args:
-            unimod_id (int): identifier of modification
+            unimod_id (int|str): identifier of modification
 
         Returns:
             str: Unimod name
         """
+        if isinstance(unimod_id, int) is True:
+            unimod_id = str(unimod_id)
         return self._map_key_2_index_2_value(unimod_id, "unimodname")
 
     # mass is ambigous therefore a list is returned
@@ -457,7 +462,10 @@ class UnimodMapper(object):
     def _map_key_2_index_2_value(self, map_key, return_key):
         index = self.mapper.get(map_key, None)
         if index is None:
-            print("Cant map", map_key, file=sys.stderr)
+            print(
+                "Cannot map {0} while trying to return {1}".format(map_key, return_key),
+                file=sys.stderr,
+            )
             return_value = None
         else:
             return_value = self._data_list_2_value(index, return_key)
