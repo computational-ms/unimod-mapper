@@ -219,7 +219,7 @@ class UnimodMapper(object):
         Returns:
             float: Unimod mono isotopic mass
         """
-        if type(unimod_id) == int:
+        if isinstance(unimod_id, int) is True:
             unimod_id = str(unimod_id)
         return self._map_key_2_index_2_value(unimod_id, "mono_mass")
 
@@ -233,7 +233,7 @@ class UnimodMapper(object):
         Returns:
             dict: Unimod elemental composition
         """
-        if type(unimod_id) == int:
+        if isinstance(unimod_id, int) is True:
             unimod_id = str(unimod_id)
         return self._map_key_2_index_2_value(unimod_id, "element")
 
@@ -247,7 +247,7 @@ class UnimodMapper(object):
         Returns:
             str: Unimod name
         """
-        if type(unimod_id) == int:
+        if isinstance(unimod_id, int) is True:
             unimod_id = str(unimod_id)
         return self._map_key_2_index_2_value(unimod_id, "unimodname")
 
