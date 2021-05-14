@@ -20,7 +20,12 @@ import sys
 import os
 import codecs
 import xml.etree.ElementTree as ET
+import requests
 
+from pathlib import Path
+
+
+url = "http://www.unimod.org/xml/unimod.xml"
 
 class UnimodMapper(object):
     """
@@ -36,13 +41,22 @@ class UnimodMapper(object):
 
     """
 
-    def __init__(self):
+    def __init__(self, refresh_xml=False):
         self._data_list = None
         self._mapper = None
 
-        self.unimod_xml_name = "unimod.xml"
-        # self.data_list = self._parseXML()
-        # self.mapper    = self._initialize_mapper()
+        # Check if unimod.xml file exists & if not reset refresh_xml flag
+        xml_file_name = os.path.basename(url)
+        full_path = Path(__file__).parent / xml_file_name
+        if os.path.exists(full_path) is False:
+            refresh_xml = True
+
+        if refresh_xml is True:
+            response = requests.get(url)
+            with open(full_path, "wb") as file:
+                file.write(response.content)
+
+        self.unimod_xml_name = xml_file_name
 
     @property
     def data_list(self):
