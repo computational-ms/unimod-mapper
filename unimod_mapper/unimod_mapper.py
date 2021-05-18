@@ -26,6 +26,7 @@ from pathlib import Path
 
 
 url = "http://www.unimod.org/xml/unimod.xml"
+from pathlib import Path
 
 class UnimodMapper(object):
     """
@@ -57,6 +58,9 @@ class UnimodMapper(object):
                 file.write(response.content)
 
         self.unimod_xml_name = xml_file_name
+        self.unimod_xml_names = ["unimod.xml", "usermods.xml"]
+        # self.data_list = self._parseXML()
+        # self.mapper    = self._initialize_mapper()
 
     @property
     def data_list(self):
@@ -93,9 +97,9 @@ class UnimodMapper(object):
         #         )
         #     )
         data_list = []
-        xml_names = [self.unimod_xml_name, "usermods.xml"]
-        for xml_name in xml_names:
-            xmlFile = os.path.join("/Users/av568207/dev/unimod-mapper/unimod_mapper/", xml_name)
+        # xml_names = [self.unimod_xml_name, "usermods.xml"]
+        for xml_name in self.unimod_xml_names:
+            xmlFile = Path(__file__).parent / xml_name
             print("> Parsing mods file ({0})".format(xmlFile))
             if os.path.exists(xmlFile):
                 unimodXML = ET.iterparse(
@@ -134,10 +138,10 @@ class UnimodMapper(object):
                         else:
                             pass
             else:
-                if xmlFile == self.unimod_xml_name:
+                if xml_name == self.unimod_xml_name:
                     print("No unimod.xml file found. Expected at {0}".format(xmlFile))
                     sys.exit(1)
-                elif xmlFile == "usermods.xml":
+                elif xml_name == "usermods.xml":
                     print("No usermods.xml file found. Expected at {0}".format(xmlFile))
                     continue
         return data_list
