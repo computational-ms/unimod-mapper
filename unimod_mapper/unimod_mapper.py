@@ -20,6 +20,7 @@ import sys
 import os
 import codecs
 import xml.etree.ElementTree as ET
+import xml.dom.minidom as xmldom
 import requests
 
 from pathlib import Path
@@ -57,7 +58,7 @@ class UnimodMapper(object):
             with open(full_path, "wb") as file:
                 file.write(response.content)
 
-        self.unimod_xml_names = ["unimod.xml", "usermods.xml"]
+        self.unimod_xml_names = ["unimod.xml", "userdefined_unimod.xml"]
         # self.data_list = self._parseXML()
         # self.mapper    = self._initialize_mapper()
 
@@ -83,25 +84,32 @@ class UnimodMapper(object):
         self._mapper = mapper
         return
 
-    def _parseXML(self):
+    def _parseXML(self, xml_file=None):
         # is_frozen = getattr(sys, "frozen", False)
         # if is_frozen:
-        #     xmlFile = os.path.normpath(
+        #     xml_file = os.path.normpath(
         #         os.path.join(os.path.dirname(sys.executable), self.unimod_xml_name)
         #     )
         # else:
-        #     xmlFile = os.path.normpath(
+        #     xml_file = os.path.normpath(
         #         os.path.join(
         #             os.path.dirname(__file__), "kb", "ext", self.unimod_xml_name
         #         )
         #     )
+        if xml_file is None:
+            xml_list = [
+                Path(__file__).parent / xml_name for xml_name in self.unimod_xml_names
+            ]
+        else:
+            xml_list = [xml_file]
+
         data_list = []
-        for xml_name in self.unimod_xml_names:
-            xmlFile = Path(__file__).parent / xml_name
-            if os.path.exists(xmlFile):
-                logger.info("> Parsing mods file ({0})".format(xmlFile))
+        for xml_path in xml_list:
+            if os.path.exists(xml_path):
+                logger.info("> Parsing mods file ({0})".format(xml_path))
                 unimodXML = ET.iterparse(
-                    codecs.open(xmlFile, "r", encoding="utf8"), events=(b"start", b"end")
+                    codecs.open(xml_path, "r", encoding="utf8"),
+                    events=(b"start", b"end"),
                 )
                 collect_element = False
                 for event, element in unimodXML:
@@ -123,8 +131,11 @@ class UnimodMapper(object):
                                     tmp["element"][element.attrib["symbol"]] = number
                         elif element.tag.endswith("}specificity"):
                             amino_acid = element.attrib["site"]
-                            if element.attrib["classification"] != "Artefact":
-                                tmp["specificity_sites"].append(amino_acid)
+                            classification = element.attrib["classification"]
+                            if classification != "Artefact":
+                                tmp["specificity_sites"].append(
+                                    (amino_acid, classification)
+                                )
                         else:
                             pass
                     else:
@@ -136,15 +147,24 @@ class UnimodMapper(object):
                         else:
                             pass
             else:
-                if xml_name == "unimod.xml":
-                    logger.warning("No unimod.xml file found. Expected at {0}".format(
-                        xmlFile))
+                if xml_path.name == "unimod.xml":
+                    logger.warning(
+                        "No unimod.xml file found. Expected at {0}".format(xml_path)
+                    )
                     # at least unimod.xml HAS to be available!
                     sys.exit(1)
-                elif xml_name == "usermods.xml":
-                    logger.info("No usermods.xml file found. Expected at {0}".format(
-                        xmlFile))
+                elif xml_path.name == "userdefined_unimod.xml":
+                    logger.info(
+                        "No userdefined_unimod.xml file found. Expected at {0}".format(
+                            xml_path
+                        )
+                    )
                     continue
+                else:
+                    logger.warning(
+                        "Specified file not found. Expected at {0}".format(xml_path)
+                    )
+                    sys.exit(1)
         return data_list
 
     def _initialize_mapper(self):
@@ -497,6 +517,64 @@ class UnimodMapper(object):
 
     def _data_list_2_value(self, index, return_key):
         return self.data_list[index][return_key]
+
+    def writeXML(self, modification_dict, xml_file=None):
+        """
+        Writes a unimod-style userdefined_unimod.xml file in
+        at the same location as the unimod.xml
+
+        Args:
+            modification_dict (dict): dictionary containing at least
+            'mass' (mass of the modification),
+            'name' (name of the modificaton),
+            'composition' (chemical composition of the modification as a dictionary {element:number})
+        """
+        if xml_file == None:
+            xml_file = Path(__file__).parent / "userdefined_unimod.xml"
+        unimod = ET.Element("{usermod}unimod")
+        modifications = ET.SubElement(unimod, "{usermod}modifications")
+        mod_dicts = [modification_dict]
+        if os.path.exists(xml_file):
+            data_list = self._parseXML(xml_file=xml_file)
+            for data_dict in data_list:
+                mod_dict = {
+                    "mass": data_dict["mono_mass"],
+                    "name": data_dict["unimodname"],
+                    "composition": data_dict["element"],
+                    "id": data_dict["unimodID"],
+                }
+                mod_dicts.insert(-1, mod_dict)
+
+        for modification_dict in mod_dicts:
+            if modification_dict.get("id", None) == None:
+                modification_dict["id"] = "u{0}".format(len(mod_dicts))
+            mod = ET.SubElement(
+                modifications,
+                "{usermod}mod",
+                title=modification_dict["name"],
+                record_id=modification_dict["id"],
+            )
+            delta = ET.SubElement(
+                mod, "{usermod}delta", mono_mass=str(modification_dict["mass"])
+            )
+
+            for symbol, number in modification_dict["composition"].items():
+                element = ET.SubElement(
+                    delta, "{usermod}element", symbol=symbol, number=str(number)
+                )
+
+        tree = ET.ElementTree(unimod)
+        tree.write(xml_file, encoding="utf-8")
+        xml = xmldom.parse(xml_file)
+        pretty_xml_as_string = xml.toprettyxml()
+        with open(xml_file, "w") as outfile:
+            print(pretty_xml_as_string, file=outfile)
+        self._reparseXML()
+        return
+
+    def _reparseXML(self, xml_file=None):
+        self._data_list = self._parseXML(xml_file=xml_file)
+        self._mapper = self._initialize_mapper()
 
 
 if __name__ == "__main__":

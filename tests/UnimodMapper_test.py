@@ -158,3 +158,17 @@ class TestXMLIntegrity:
         #         with self.assertRaises(SystemExit) as system_exit_check:
         #             self.alt_mapper._parseXML()
         #         self.assertEqual(system_exit_check.exception.code, 1)
+
+    def test_write(self):
+        xml_file = os.path.join(os.path.dirname(__file__), "test_only_unimod.xml")
+        assert os.path.exists(xml_file) is False
+        mod_dict = {
+            "mass": 1337.42,
+            "name": "GnomeChompski",
+            "composition": {"L": 4, "D": 2},
+        }
+        M.writeXML(mod_dict, xml_file=xml_file)
+        assert os.path.exists(xml_file)
+        M._reparseXML(xml_file=xml_file)
+        assert M.mass2name_list(1337.42) == ["GnomeChompski"]
+        os.remove(xml_file)
