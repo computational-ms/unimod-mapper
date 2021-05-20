@@ -126,8 +126,8 @@ CONVERSIONS = [
         ],
     },
     {
-        "function": M.name2specificity_site_list,
-        "cases": [{"in": {"args": ["Ala->Gln"]}, "out": ["A"]}],  #
+        "function": M.name2specificity_list,
+        "cases": [{"in": {"args": ["Ala->Gln"]}, "out": [("A", "AA substitution")]}],  #
     },
     {
         "function": M.composition2id_list,
