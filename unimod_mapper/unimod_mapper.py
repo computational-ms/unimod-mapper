@@ -20,6 +20,13 @@ import sys
 import os
 import codecs
 import xml.etree.ElementTree as ET
+import requests
+
+from pathlib import Path
+from loguru import logger
+
+# define the url from where unimod.xml file should be retrieved
+url = "http://www.unimod.org/xml/unimod.xml"
 
 
 class UnimodMapper(object):
@@ -36,11 +43,21 @@ class UnimodMapper(object):
 
     """
 
-    def __init__(self):
+    def __init__(self, refresh_xml=False):
         self._data_list = None
         self._mapper = None
 
-        self.unimod_xml_name = "unimod.xml"
+        # Check if unimod.xml file exists & if not reset refresh_xml flag
+        full_path = Path(__file__).parent / "unimod.xml"
+        if os.path.exists(full_path) is False:
+            refresh_xml = True
+
+        if refresh_xml is True:
+            response = requests.get(url)
+            with open(full_path, "wb") as file:
+                file.write(response.content)
+
+        self.unimod_xml_names = ["unimod.xml", "usermods.xml"]
         # self.data_list = self._parseXML()
         # self.mapper    = self._initialize_mapper()
 
@@ -78,49 +95,56 @@ class UnimodMapper(object):
         #             os.path.dirname(__file__), "kb", "ext", self.unimod_xml_name
         #         )
         #     )
-        xmlFile = os.path.join(os.path.dirname(__file__), self.unimod_xml_name)
         data_list = []
-        print("> Parsing unimod.xml from {0}".format(xmlFile))
-        if os.path.exists(xmlFile):
-            unimodXML = ET.iterparse(
-                codecs.open(xmlFile, "r", encoding="utf8"), events=(b"start", b"end")
-            )
-            collect_element = False
-            for event, element in unimodXML:
-                if event == b"start":
-                    if element.tag.endswith("}mod"):
-                        tmp = {
-                            "unimodID": element.attrib["record_id"],
-                            "unimodname": element.attrib["title"],
-                            "element": {},
-                            "specificity_sites": [],
-                        }
-                    elif element.tag.endswith("}delta"):
-                        collect_element = True
-                        tmp["mono_mass"] = float(element.attrib["mono_mass"])
-                    elif element.tag.endswith("}element"):
-                        if collect_element is True:
-                            number = int(element.attrib["number"])
-                            if number != 0:
-                                tmp["element"][element.attrib["symbol"]] = number
-                    elif element.tag.endswith("}specificity"):
-                        amino_acid = element.attrib["site"]
-                        if element.attrib["classification"] != "Artefact":
-                            tmp["specificity_sites"].append(amino_acid)
+        for xml_name in self.unimod_xml_names:
+            xmlFile = Path(__file__).parent / xml_name
+            if os.path.exists(xmlFile):
+                logger.info("> Parsing mods file ({0})".format(xmlFile))
+                unimodXML = ET.iterparse(
+                    codecs.open(xmlFile, "r", encoding="utf8"), events=(b"start", b"end")
+                )
+                collect_element = False
+                for event, element in unimodXML:
+                    if event == b"start":
+                        if element.tag.endswith("}mod"):
+                            tmp = {
+                                "unimodID": element.attrib["record_id"],
+                                "unimodname": element.attrib["title"],
+                                "element": {},
+                                "specificity_sites": [],
+                            }
+                        elif element.tag.endswith("}delta"):
+                            collect_element = True
+                            tmp["mono_mass"] = float(element.attrib["mono_mass"])
+                        elif element.tag.endswith("}element"):
+                            if collect_element is True:
+                                number = int(element.attrib["number"])
+                                if number != 0:
+                                    tmp["element"][element.attrib["symbol"]] = number
+                        elif element.tag.endswith("}specificity"):
+                            amino_acid = element.attrib["site"]
+                            if element.attrib["classification"] != "Artefact":
+                                tmp["specificity_sites"].append(amino_acid)
+                        else:
+                            pass
                     else:
-                        pass
-                else:
-                    # end element
-                    if element.tag.endswith("}delta"):
-                        collect_element = False
-                    elif element.tag.endswith("}mod"):
-                        data_list.append(tmp)
-                    else:
-                        pass
-
-        else:
-            print("No unimod.xml file found. Expected at {0}".format(xmlFile))
-            sys.exit(1)
+                        # end element
+                        if element.tag.endswith("}delta"):
+                            collect_element = False
+                        elif element.tag.endswith("}mod"):
+                            data_list.append(tmp)
+                        else:
+                            pass
+            else:
+                if xml_name == "unimod.xml":
+                    logger.warning("No unimod.xml file found. Expected at {0}".format(
+                        xmlFile))
+                    # at least unimod.xml HAS to be available!
+                    sys.exit(1)
+                elif xml_name == "usermods.xml":
+                    logger.info("No usermods.xml file found. Expected at {0}".format(
+                        xmlFile))
+                    continue
         return data_list
 
     def _initialize_mapper(self):
