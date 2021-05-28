@@ -44,7 +44,7 @@ class UnimodMapper(object):
 
     """
 
-    def __init__(self, refresh_xml=False):
+    def __init__(self, refresh_xml=False, xml_file_list=[]):
         self._data_list = None
         self._mapper = None
 
@@ -58,14 +58,18 @@ class UnimodMapper(object):
             with open(full_path, "wb") as file:
                 file.write(response.content)
 
-        self.unimod_xml_names = ["unimod.xml", "userdefined_unimod.xml"]
+        self.unimod_xml_names = ["unimod.xml", "usermods.xml"]
+        self.unimod_xml_names.extend(xml_file_list)
         # self.data_list = self._parseXML()
         # self.mapper    = self._initialize_mapper()
 
     @property
     def data_list(self):
         if self._data_list is None:
-            self._data_list = self._parseXML()
+            xml_list = [
+                Path(__file__).parent / xml_name for xml_name in self.unimod_xml_names
+            ]
+            self._data_list = self._parseXML(xml_file_list=xml_list)
         return self._data_list
 
     @data_list.setter
@@ -84,7 +88,7 @@ class UnimodMapper(object):
         self._mapper = mapper
         return
 
-    def _parseXML(self, xml_file=None):
+    def _parseXML(self, xml_file_list=[]):
         # is_frozen = getattr(sys, "frozen", False)
         # if is_frozen:
         #     xml_file = os.path.normpath(
@@ -96,15 +100,10 @@ class UnimodMapper(object):
         #             os.path.dirname(__file__), "kb", "ext", self.unimod_xml_name
         #         )
         #     )
-        if xml_file is None:
-            xml_list = [
-                Path(__file__).parent / xml_name for xml_name in self.unimod_xml_names
-            ]
-        else:
-            xml_list = [xml_file]
 
         data_list = []
-        for xml_path in xml_list:
+        for xml_path in xml_file_list:
+            xml_path = Path(xml_path)
             if os.path.exists(xml_path):
                 logger.info("> Parsing mods file ({0})".format(xml_path))
                 unimodXML = ET.iterparse(
@@ -150,12 +149,11 @@ class UnimodMapper(object):
                         "No unimod.xml file found. Expected at {0}".format(xml_path)
                     )
                     # at least unimod.xml HAS to be available!
+                    print(xml_path)
                     sys.exit(1)
-                elif xml_path.name == "userdefined_unimod.xml":
+                elif xml_path.name == "usermods.xml":
                     logger.info(
-                        "No userdefined_unimod.xml file found. Expected at {0}".format(
-                            xml_path
-                        )
+                        "No usermods.xml file found. Expected at {0}".format(xml_path)
                     )
                     continue
                 else:
@@ -519,7 +517,7 @@ class UnimodMapper(object):
 
     def writeXML(self, modification_dict, xml_file=None):
         """
-        Writes a unimod-style userdefined_unimod.xml file in
+        Writes a unimod-style usermods.xml file in
         at the same location as the unimod.xml
 
         Args:
@@ -529,12 +527,14 @@ class UnimodMapper(object):
             'composition' (chemical composition of the modification as a dictionary {element:number})
         """
         if xml_file == None:
-            xml_file = Path(__file__).parent / "userdefined_unimod.xml"
+            xml_file = Path(__file__).parent / "usermods.xml"
+        else:
+            xml_file = Path(xml_file)
         unimod = ET.Element("{usermod}unimod")
         modifications = ET.SubElement(unimod, "{usermod}modifications")
         mod_dicts = [modification_dict]
         if os.path.exists(xml_file):
-            data_list = self._parseXML(xml_file=xml_file)
+            data_list = self._parseXML(xml_file_list=[xml_file])
             for data_dict in data_list:
                 mod_dict = {
                     "mass": data_dict["mono_mass"],
@@ -563,16 +563,20 @@ class UnimodMapper(object):
                 )
 
         tree = ET.ElementTree(unimod)
-        tree.write(xml_file, encoding="utf-8")
-        xml = xmldom.parse(xml_file)
+        tree.write(str(xml_file), encoding="utf-8")
+        xml = xmldom.parse(str(xml_file))
         pretty_xml_as_string = xml.toprettyxml()
         with open(xml_file, "w") as outfile:
             print(pretty_xml_as_string, file=outfile)
-        self._reparseXML()
+        xml_list = [
+            Path(__file__).parent / xml_name for xml_name in self.unimod_xml_names
+        ]
+        xml_list.append(xml_file)
+        self._reparseXML(xml_file_list=xml_list)
         return
 
-    def _reparseXML(self, xml_file=None):
-        self._data_list = self._parseXML(xml_file=xml_file)
+    def _reparseXML(self, xml_file_list=[]):
+        self._data_list = self._parseXML(xml_file_list=xml_file_list)
         self._mapper = self._initialize_mapper()
 
 

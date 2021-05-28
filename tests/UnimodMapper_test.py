@@ -169,6 +169,5 @@ class TestXMLIntegrity:
         }
         M.writeXML(mod_dict, xml_file=xml_file)
         assert os.path.exists(xml_file)
-        M._reparseXML(xml_file=xml_file)
         assert M.mass2name_list(1337.42) == ["GnomeChompski"]
         os.remove(xml_file)
