@@ -44,7 +44,9 @@ class UnimodMapper(object):
 
     """
 
-    def __init__(self, refresh_xml=False, xml_file_list=[]):
+    def __init__(self, refresh_xml=False, xml_file_list=None):
+        if xml_file_list is None:
+            xml_file_list = []
         self._data_list = None
         self._mapper = None
 
@@ -88,7 +90,7 @@ class UnimodMapper(object):
         self._mapper = mapper
         return
 
-    def _parseXML(self, xml_file_list=[]):
+    def _parseXML(self, xml_file_list=None):
         # is_frozen = getattr(sys, "frozen", False)
         # if is_frozen:
         #     xml_file = os.path.normpath(
@@ -100,7 +102,8 @@ class UnimodMapper(object):
         #             os.path.dirname(__file__), "kb", "ext", self.unimod_xml_name
         #         )
         #     )
-
+        if xml_file_list is None:
+            xml_file_list = []
         data_list = []
         for xml_path in xml_file_list:
             xml_path = Path(xml_path)
