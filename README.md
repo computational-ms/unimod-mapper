@@ -3,6 +3,7 @@ Unimod-mapper
 
 ![RTD](https://readthedocs.org/projects/unimod-mapper/badge/?version=latest) 
 ![Travis-CI](https://travis-ci.org/computational-ms/unimod-mapper.svg?branch=master)
+![pyPi](https://img.shields.io/pypi/v/unimod-mapper.svg)
 
 Unimod is the public domain database for amino acid modifications. For more detail, please see [here](http://www.unimod.org/unimod_help.html).
 This Python module offers helper functions to query the unimod.xml from [unimod.org](http://www.unimod.org/modifications_list.php?)
