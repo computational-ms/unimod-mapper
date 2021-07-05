@@ -66,9 +66,12 @@ class UnimodMapper(object):
         # Check if usermods.xml file exists & if not create an initial empty file
         usermods_path = Path(__file__).parent / "usermods.xml"
         if os.path.exists(usermods_path) is False:
-            with open(usermods_path, 'w'):
-                pass
-
+            mod_dict = {
+                "mass": 1337.42,
+                "name": "GnomeChompski",
+                "composition": {"L": 4, "D": 2},
+            }
+            self.writeXML(mod_dict, usermods_path)
         # self.data_list = self._parseXML()
         # self.mapper    = self._initialize_mapper()
 
