@@ -6,12 +6,15 @@ from pathlib import Path
 import pytest
 
 # this block is not needed anymore, when we have a proper package
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir)))
+test_dir = Path(__file__).parent
+package_dir = test_dir.parent
+sys.path.append(package_dir)
 # EOBlock
 import unimod_mapper
 
-
-M = unimod_mapper.UnimodMapper()
+unimod_path = package_dir.joinpath("unimod_mapper", "unimod.xml")
+usermod_path = test_dir.joinpath("usermod.xml")
+M = unimod_mapper.UnimodMapper(xml_file_list=[usermod_path])
 
 CONVERSIONS = [
     {
@@ -147,7 +150,7 @@ CONVERSIONS = [
 
 MULTIFILE_TESTS = [
     {
-        "order": ["unimod.xml", "usermod.xml"],
+        "order": [unimod_path, usermod_path],
         "cases": [
             {"in": "TMTpro", "out": "2016"},
             {"in": "SILAC K+6 TMT", "out": "u1"},
@@ -155,7 +158,7 @@ MULTIFILE_TESTS = [
         ]
     },
     {
-        "order": ["usermod.xml", "unimod.xml"],
+        "order": [usermod_path, unimod_path],
         "cases": [
             {"in": "TMTpro", "out": "u14"},
             {"in": "SILAC K+6 TMT", "out": "u1"},
@@ -178,7 +181,7 @@ class TestXMLIntegrity:
         #         self.assertEqual(system_exit_check.exception.code, 1)
 
     def test_write(self):
-        xml_file = Path(__file__).parent.joinpath("test_only_unimod.xml")
+        xml_file = test_dir.joinpath("test_only_unimod.xml")
         assert xml_file.exists() is False
         mod_dict = {
             "mass": 1337.42,
@@ -192,7 +195,6 @@ class TestXMLIntegrity:
 
     def test_read_multiple_unimod_files(self):
         for data in MULTIFILE_TESTS:
-            path_list = [Path(__file__).parent.parent.joinpath("unimod_mapper", x) for x in data["order"]]
-            um = unimod_mapper.UnimodMapper(xml_file_list=path_list)
+            um = unimod_mapper.UnimodMapper(xml_file_list=data["order"])
             for case in data["cases"]:
                 assert case["out"] == um.name2id(case["in"])
