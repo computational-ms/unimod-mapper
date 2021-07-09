@@ -150,15 +150,15 @@ MULTIFILE_TESTS = [
         "order": ["unimod.xml", "usermod.xml"],
         "cases": [
             {"in": "TMTpro", "out": "2016"},
-            {"in": "SILAC K+6 TMT", "out": "10000"},
+            {"in": "SILAC K+6 TMT", "out": "u1"},
             {"in": "ICAT-G:2H(8)", "out": "9"},
         ]
     },
     {
         "order": ["usermod.xml", "unimod.xml"],
         "cases": [
-            {"in": "TMTpro", "out": "10013"},
-            {"in": "SILAC K+6 TMT", "out": "10000"},
+            {"in": "TMTpro", "out": "u14"},
+            {"in": "SILAC K+6 TMT", "out": "u1"},
             {"in": "ICAT-G:2H(8)", "out": "9"},
         ]
     },
@@ -179,8 +179,6 @@ class TestXMLIntegrity:
 
     def test_write(self):
         xml_file = Path(__file__).parent.joinpath("test_only_unimod.xml")
-        if xml_file.exists():
-            xml_file.unlink()
         assert xml_file.exists() is False
         mod_dict = {
             "mass": 1337.42,

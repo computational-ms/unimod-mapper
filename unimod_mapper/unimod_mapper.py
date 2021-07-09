@@ -52,7 +52,7 @@ class UnimodMapper(object):
 
         # Check if unimod.xml file exists & if not reset refresh_xml flag
         full_path = Path(__file__).parent / "unimod.xml"
-        if os.path.exists(full_path) is False:
+        if full_path.exists() is False:
             refresh_xml = True
 
         if refresh_xml is True:
@@ -92,21 +92,10 @@ class UnimodMapper(object):
         return
 
     def _parseXML(self, xml_file_list=None):
-        # is_frozen = getattr(sys, "frozen", False)
-        # if is_frozen:
-        #     xml_file = os.path.normpath(
-        #         os.path.join(os.path.dirname(sys.executable), self.unimod_xml_name)
-        #     )
-        # else:
-        #     xml_file = os.path.normpath(
-        #         os.path.join(
-        #             os.path.dirname(__file__), "kb", "ext", self.unimod_xml_name
-        #         )
-        #     )
         if xml_file_list is None:
             xml_file_list = []
         data_list = []
-        usermod_id = 10000
+        usermod_id = 1
         for xml_file in xml_file_list:
             xml_path = Path(xml_file)
             if xml_path.exists():
@@ -122,7 +111,7 @@ class UnimodMapper(object):
                             if "record_id" in element.attrib:
                                 mod_id = element.attrib["record_id"]
                             else:
-                                mod_id = f"{usermod_id}"
+                                mod_id = f"u{usermod_id}"
                                 usermod_id += 1
 
                             tmp = {
@@ -544,7 +533,7 @@ class UnimodMapper(object):
         unimod = ET.Element("{usermod}unimod")
         modifications = ET.SubElement(unimod, "{usermod}modifications")
         mod_dicts = [modification_dict]
-        if os.path.exists(xml_file):
+        if xml_file.exists():
             data_list = self._parseXML(xml_file_list=[xml_file])
             for data_dict in data_list:
                 mod_dict = {

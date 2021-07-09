@@ -22,6 +22,7 @@ setup(
         "unimod_mapper": [
             "version.txt",
             "unimod.xml",
+            "usermod.xml",
         ]
     },
     python_requires=">=3.6.0",
