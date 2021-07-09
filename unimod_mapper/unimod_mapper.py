@@ -129,7 +129,7 @@ class UnimodMapper(object):
                                 "unimodID": mod_id,
                                 "unimodname": element.attrib["title"],
                                 "element": {},
-                                "specificity_sites": [],
+                                "specificity": [],
                             }
                         elif element.tag.endswith("}delta"):
                             collect_element = True
@@ -143,7 +143,7 @@ class UnimodMapper(object):
                             amino_acid = element.attrib["site"]
                             classification = element.attrib["classification"]
                             if classification != "Artefact":
-                                tmp["specificity_sites"].append((amino_acid, classification))
+                                tmp["specificity"].append((amino_acid, classification))
                         else:
                             pass
                     else:
@@ -199,7 +199,7 @@ class UnimodMapper(object):
                     if value not in mapper.keys():
                         mapper[value] = []
                     mapper[value].append(index)
-                elif key == "specificity_sites":
+                elif key == "specificity":
                     pass
                 else:
                     if value not in mapper.keys():
@@ -257,7 +257,7 @@ class UnimodMapper(object):
         list_2_return = None
         index = self.mapper.get(unimod_name, None)
         if index is not None:
-            list_2_return = self._data_list_2_value(index, "specificity_sites")
+            list_2_return = self._data_list_2_value(index, "specificity")
         return list_2_return
 
     # unimodid 2 ....
