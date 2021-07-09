@@ -2,7 +2,7 @@
 # encoding: utf-8
 import os
 import sys
-
+from pathlib import Path
 import pytest
 
 # this block is not needed anymore, when we have a proper package
@@ -145,6 +145,24 @@ CONVERSIONS = [
     },
 ]
 
+MULTIFILE_TESTS = [
+    {
+        "order": ["unimod.xml", "usermod.xml"],
+        "cases": [
+            {"in": "TMTpro", "out": "2016"},
+            {"in": "SILAC K+6 TMT", "out": "10000"},
+            {"in": "ICAT-G:2H(8)", "out": "9"},
+        ]
+    },
+    {
+        "order": ["usermod.xml", "unimod.xml"],
+        "cases": [
+            {"in": "TMTpro", "out": "10013"},
+            {"in": "SILAC K+6 TMT", "out": "10000"},
+            {"in": "ICAT-G:2H(8)", "out": "9"},
+        ]
+    },
+]
 
 class TestXMLIntegrity:
     @pytest.mark.parametrize("conversion", CONVERSIONS)
@@ -160,8 +178,10 @@ class TestXMLIntegrity:
         #         self.assertEqual(system_exit_check.exception.code, 1)
 
     def test_write(self):
-        xml_file = os.path.join(os.path.dirname(__file__), "test_only_unimod.xml")
-        assert os.path.exists(xml_file) is False
+        xml_file = Path(__file__).parent.joinpath("test_only_unimod.xml")
+        if xml_file.exists():
+            xml_file.unlink()
+        assert xml_file.exists() is False
         mod_dict = {
             "mass": 1337.42,
             "name": "GnomeChompski",
@@ -170,4 +190,11 @@ class TestXMLIntegrity:
         M.writeXML(mod_dict, xml_file=xml_file)
         assert os.path.exists(xml_file)
         assert M.mass2name_list(1337.42) == ["GnomeChompski"]
-        os.remove(xml_file)
+        xml_file.unlink()
+
+    def test_read_multiple_unimod_files(self):
+        for data in MULTIFILE_TESTS:
+            path_list = [Path(__file__).parent.parent.joinpath("unimod_mapper", x) for x in data["order"]]
+            um = unimod_mapper.UnimodMapper(xml_file_list=path_list)
+            for case in data["cases"]:
+                assert case["out"] == um.name2id(case["in"])

@@ -60,10 +60,11 @@ class UnimodMapper(object):
             with open(full_path, "wb") as file:
                 file.write(response.content)
 
-        self.unimod_xml_names = ["unimod.xml", "usermods.xml"]
-        self.unimod_xml_names.extend(xml_file_list)
-        # self.data_list = self._parseXML()
-        # self.mapper    = self._initialize_mapper()
+        self.unimod_xml_names = xml_file_list
+        names = [x.name for x in xml_file_list]
+        for xml in ["usermod.xml", "unimod.xml"]:
+            if xml not in names:
+                self.unimod_xml_names.append(xml)
 
     @property
     def data_list(self):
@@ -105,9 +106,10 @@ class UnimodMapper(object):
         if xml_file_list is None:
             xml_file_list = []
         data_list = []
-        for xml_path in xml_file_list:
-            xml_path = Path(xml_path)
-            if os.path.exists(xml_path):
+        usermod_id = 10000
+        for xml_file in xml_file_list:
+            xml_path = Path(xml_file)
+            if xml_path.exists():
                 logger.info("> Parsing mods file ({0})".format(xml_path))
                 unimodXML = ET.iterparse(
                     codecs.open(xml_path, "r", encoding="utf8"),
@@ -117,11 +119,17 @@ class UnimodMapper(object):
                 for event, element in unimodXML:
                     if event == b"start":
                         if element.tag.endswith("}mod"):
+                            if "record_id" in element.attrib:
+                                mod_id = element.attrib["record_id"]
+                            else:
+                                mod_id = f"{usermod_id}"
+                                usermod_id += 1
+
                             tmp = {
-                                "unimodID": element.attrib["record_id"],
+                                "unimodID": mod_id,
                                 "unimodname": element.attrib["title"],
                                 "element": {},
-                                "specificity": [],
+                                "specificity_sites": [],
                             }
                         elif element.tag.endswith("}delta"):
                             collect_element = True
@@ -135,7 +143,7 @@ class UnimodMapper(object):
                             amino_acid = element.attrib["site"]
                             classification = element.attrib["classification"]
                             if classification != "Artefact":
-                                tmp["specificity"].append((amino_acid, classification))
+                                tmp["specificity_sites"].append((amino_acid, classification))
                         else:
                             pass
                     else:
@@ -191,7 +199,7 @@ class UnimodMapper(object):
                     if value not in mapper.keys():
                         mapper[value] = []
                     mapper[value].append(index)
-                elif key == "specificity":
+                elif key == "specificity_sites":
                     pass
                 else:
                     if value not in mapper.keys():
@@ -249,7 +257,7 @@ class UnimodMapper(object):
         list_2_return = None
         index = self.mapper.get(unimod_name, None)
         if index is not None:
-            list_2_return = self._data_list_2_value(index, "specificity")
+            list_2_return = self._data_list_2_value(index, "specificity_sites")
         return list_2_return
 
     # unimodid 2 ....
