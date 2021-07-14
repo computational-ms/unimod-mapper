@@ -48,37 +48,70 @@ CONVERSIONS = [
     },
     {
         "function": M.name2id_list,
-        "cases": [{"in": {"args": ["ICAT-G:2H(8)"]}, "out": ["8", "1514"]}],  #
+        "cases": [{"in": {"args": ["ICAT-G:2H(8)"]}, "out": ["9", "9"]}],  #
     },
     {
         "function": M.name2first_id,
-        "cases": [{"in": {"args": ["ICAT-G:2H(8)"]}, "out": "8"}],  #
+        "cases": [{"in": {"args": ["ICAT-G:2H(8)"]}, "out": "9"}],  #
     },
     {
-        "function": M.id2mass,
+        "function": M.id2mass_list,
         "cases": [
-            {"in": {"args": ["8"]}, "out": 494.30142},
-            {"in": {"args": [8]}, "out": 494.30142},
+            {"in": {"args": ["9"]}, "out": [494.30142, 494.30142]},
+            {"in": {"args": [9]}, "out": [494.30142, 494.30142]},
         ],
     },  #
     {
-        "function": M.id2composition,
+        "function": M.id2first_mass,
+        "cases": [
+            {"in": {"args": ["9"]}, "out": 494.30142},
+            {"in": {"args": [9]}, "out": 494.30142},
+        ],
+    },  #
+    {
+        "function": M.id2composition_list,
         "cases": [
             {
-                "in": {"args": ["8"]},
+                "in": {"args": ["9"]},
+                "out": [
+                    {"N": 4, "S": 1, "2H": 8, "O": 6, "C": 22, "H": 30},
+                    {"N": 4, "S": 1, "2H": 8, "O": 6, "C": 22, "H": 30},
+                ],
+            },
+            {
+                "in": {"args": [9]},
+                "out": [
+                    {"N": 4, "S": 1, "2H": 8, "O": 6, "C": 22, "H": 30},
+                    {"N": 4, "S": 1, "2H": 8, "O": 6, "C": 22, "H": 30},
+                ],
+            },  #
+        ],
+    },
+    {
+        "function": M.id2first_composition,
+        "cases": [
+            {
+                "in": {"args": ["9"]},
                 "out": {"N": 4, "S": 1, "2H": 8, "O": 6, "C": 22, "H": 30},
             },
             {
-                "in": {"args": [8]},
+                "in": {"args": [9]},
                 "out": {"N": 4, "S": 1, "2H": 8, "O": 6, "C": 22, "H": 30},
             },  #
         ],
     },
     {
-        "function": M.id2name,
+        "function": M.id2name_list,
         "cases": [
-            {"in": {"args": ["8"]}, "out": "ICAT-G:2H(8)"},
-            {"in": {"args": [8]}, "out": "ICAT-G:2H(8)"},
+            {"in": {"args": ["9"]}, "out": ["ICAT-G:2H(8)", "ICAT-G:2H(8)"]},
+            {"in": {"args": [9]}, "out": ["ICAT-G:2H(8)", "ICAT-G:2H(8)"]},
+        ],
+    },  #
+    {
+        "function": M.id2first_name,
+        "cases": [
+            {"in": {"args": ["9"]}, "out": "ICAT-G:2H(8)"},
+            {"in": {"args": [9]}, "out": "ICAT-G:2H(8)"},
         ],
     },  #
     {
@@ -89,7 +122,7 @@ CONVERSIONS = [
     },
     {
         "function": M.mass2id_list,
-        "cases": [{"in": {"args": [494.30142]}, "out": ["8", "1514"]}],  #
+        "cases": [{"in": {"args": [494.30142]}, "out": ["9", "9"]}],  #
     },
     {
         "function": M.mass2composition_list,
@@ -109,18 +142,18 @@ CONVERSIONS = [
             {
                 "in": {"args": [18], "kwargs": {"decimal_places": 0}},
                 "out": [
-                    "99",
-                    "134",
-                    "414",
-                    "713",
-                    "799",
-                    "1413",
-                    "1605",
-                    "1640",
-                    "1920",
-                    "2219",
-                    "2305",
-                    "2919",
+                    "127",
+                    "329",
+                    "608",
+                    "1079",
+                    "1167",
+                    "1922",
+                    "127",
+                    "329",
+                    "608",
+                    "1079",
+                    "1167",
+                    "1922",
                 ],
             }  #
         ],
@@ -131,6 +164,12 @@ CONVERSIONS = [
             {
                 "in": {"args": [18], "kwargs": {"decimal_places": 0}},
                 "out": [
+                    {"F": 1, "H": -1},
+                    {"13C": 1, "H": -1, "2H": 3},
+                    {"H": -2, "C": -1, "S": 1},
+                    {"H": 2, "C": 4, "O": -2},
+                    {"H": -2, "C": -1, "O": 2},
+                    {"H": 2, "O": 1},
                     {"F": 1, "H": -1},
                     {"13C": 1, "H": -1, "2H": 3},
                     {"H": -2, "C": -1, "S": 1},
@@ -153,6 +192,12 @@ CONVERSIONS = [
                     "Glu->Phe",
                     "Pro->Asp",
                     "Pro->HAVA",
+                    "Fluoro",
+                    "Methyl:2H(3)13C(1)",
+                    "Xle->Met",
+                    "Glu->Phe",
+                    "Pro->Asp",
+                    "Pro->HAVA",
                 ],
             }  #
         ],
@@ -162,18 +207,32 @@ CONVERSIONS = [
         "cases": [
             {
                 "in": {"args": ["C(2)H(3)N(1)O(1)"]},
-                "out": ["Carbamidomethyl", "Ala->Gln", "Gly->Asn", "Gly"],
+                "out": [
+                    "Carbamidomethyl",
+                    "Ala->Gln",
+                    "Gly->Asn",
+                    "Gly",
+                    "Carbamidomethyl",
+                    "Ala->Gln",
+                    "Gly->Asn",
+                    "Gly",
+                ],
             }
         ],
     },
     {
         "function": M.name2specificity_list,
-        "cases": [{"in": {"args": ["Ala->Gln"]}, "out": [("A", "AA substitution")]}],  #
+        "cases": [
+            {
+                "in": {"args": ["Ala->Gln"]},
+                "out": [[("A", "AA substitution")], [("A", "AA substitution")]],
+            }
+        ],  #
     },
     {
         "function": M.composition2id_list,
         "cases": [
-            {"in": {"args": ["C(22)H(30)2H(8)N(4)O(6)S(1)"]}, "out": ["8", "1514"]}
+            {"in": {"args": ["C(22)H(30)2H(8)N(4)O(6)S(1)"]}, "out": ["9", "9"]}
         ],  #
     },
     {
@@ -192,17 +251,17 @@ MULTIFILE_TESTS = [
     {
         "order": [unimod_path, usermod_path],
         "cases": [
-            {"in": "TMTpro", "out": ["1484", "1499"]},
-            {"in": "SILAC K+6 TMT", "out": ["1486"]},
-            {"in": "ICAT-G:2H(8)", "out": ["8"]},
+            {"in": "TMTpro", "out": ["2016", ""]},
+            {"in": "SILAC K+6 TMT", "out": [""]},
+            {"in": "ICAT-G:2H(8)", "out": ["9"]},
         ],
     },
     {
         "order": [usermod_path, unimod_path],
         "cases": [
-            {"in": "TMTpro", "out": ["13", "1504"]},
-            {"in": "SILAC K+6 TMT", "out": ["0"]},
-            {"in": "ICAT-G:2H(8)", "out": ["28"]},
+            {"in": "TMTpro", "out": ["", "2016"]},
+            {"in": "SILAC K+6 TMT", "out": [""]},
+            {"in": "ICAT-G:2H(8)", "out": ["9"]},
         ],
     },
 ]
@@ -235,7 +294,13 @@ class TestXMLIntegrity:
         xml_file.unlink()
 
     def test_read_multiple_unimod_files(self):
+        # the order of the files shouldn't change the unimodIDs
         for data in MULTIFILE_TESTS:
             um = unimod_mapper.UnimodMapper(xml_file_list=data["order"])
             for case in data["cases"]:
                 assert case["out"] == um.name2id_list(case["in"])
+
+    def test_unimod_files_is_none(self):
+        um = unimod_mapper.UnimodMapper(xml_file_list=None)
+        names = [x.name for x in um.unimod_xml_names]
+        assert names == ["usermod.xml", "unimod.xml"]
