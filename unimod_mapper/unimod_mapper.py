@@ -52,7 +52,7 @@ class UnimodMapper(object):
 
         # Check if unimod.xml file exists & if not reset refresh_xml flag
         full_path = Path(__file__).parent / "unimod.xml"
-        if os.path.exists(full_path) is False:
+        if full_path.exists() is False:
             refresh_xml = True
 
         if refresh_xml is True:
@@ -60,18 +60,16 @@ class UnimodMapper(object):
             with open(full_path, "wb") as file:
                 file.write(response.content)
 
-        self.unimod_xml_names = ["unimod.xml", "usermods.xml"]
-        self.unimod_xml_names.extend(xml_file_list)
-        # self.data_list = self._parseXML()
-        # self.mapper    = self._initialize_mapper()
+        self.unimod_xml_names = xml_file_list
+        names = [x.name for x in xml_file_list]
+        for xml in ["usermod.xml", "unimod.xml"]:
+            if xml not in names:
+                self.unimod_xml_names.append(Path(__file__).parent.joinpath(xml))
 
     @property
     def data_list(self):
         if self._data_list is None:
-            xml_list = [
-                Path(__file__).parent / xml_name for xml_name in self.unimod_xml_names
-            ]
-            self._data_list = self._parseXML(xml_file_list=xml_list)
+            self._data_list = self._parseXML(xml_file_list=self.unimod_xml_names)
         return self._data_list
 
     @data_list.setter
@@ -91,23 +89,12 @@ class UnimodMapper(object):
         return
 
     def _parseXML(self, xml_file_list=None):
-        # is_frozen = getattr(sys, "frozen", False)
-        # if is_frozen:
-        #     xml_file = os.path.normpath(
-        #         os.path.join(os.path.dirname(sys.executable), self.unimod_xml_name)
-        #     )
-        # else:
-        #     xml_file = os.path.normpath(
-        #         os.path.join(
-        #             os.path.dirname(__file__), "kb", "ext", self.unimod_xml_name
-        #         )
-        #     )
         if xml_file_list is None:
             xml_file_list = []
         data_list = []
-        for xml_path in xml_file_list:
-            xml_path = Path(xml_path)
-            if os.path.exists(xml_path):
+        for xml_file in xml_file_list:
+            xml_path = Path(xml_file)
+            if xml_path.exists():
                 logger.info("> Parsing mods file ({0})".format(xml_path))
                 unimodXML = ET.iterparse(
                     codecs.open(xml_path, "r", encoding="utf8"),
@@ -117,8 +104,12 @@ class UnimodMapper(object):
                 for event, element in unimodXML:
                     if event == b"start":
                         if element.tag.endswith("}mod"):
+                            try:
+                                unimodid = element.attrib["record_id"]
+                            except KeyError:
+                                unimodid = ""
                             tmp = {
-                                "unimodID": element.attrib["record_id"],
+                                "unimodID": unimodid,
                                 "unimodname": element.attrib["title"],
                                 "element": {},
                                 "specificity": [],
@@ -187,21 +178,35 @@ class UnimodMapper(object):
                     if hill_notation not in mapper.keys():
                         mapper[hill_notation] = []
                     mapper[hill_notation].append(index)
-                elif key == "mono_mass":
-                    if value not in mapper.keys():
-                        mapper[value] = []
-                    mapper[value].append(index)
                 elif key == "specificity":
                     pass
                 else:
                     if value not in mapper.keys():
-                        mapper[value] = index
+                        mapper[value] = []
+                    mapper[value].append(index)
         return mapper
 
     # name 2 ....
-    def name2mass(self, unimod_name):
+    def name2mass_list(self, unimod_name):
         """
-        Converts unimod name to unimod mono isotopic mass
+        Converts unimod name to all matching unimod mono isotopic masses
+
+        Args:
+            unimod_name (str): name of modification (as named in unimod)
+
+        Returns:
+            list: list of Unimod mono isotopic masses
+        """
+        list_2_return = []
+        index_list = self.mapper.get(unimod_name, None)
+        if index_list is not None:
+            for index in index_list:
+                list_2_return.append(self._data_list_2_value(index, "mono_mass"))
+        return list_2_return
+
+    def name2first_mass(self, unimod_name):
+        """
+        Converts unimod name to unimod mono isotopic mass returning the first instance
 
         Args:
             unimod_name (str): name of modification (as named in unimod)
@@ -209,31 +214,68 @@ class UnimodMapper(object):
         Returns:
             float: Unimod mono isotopic mass
         """
-        return self._map_key_2_index_2_value(unimod_name, "mono_mass")
+        index = min(self.mapper.get(unimod_name, None))
+        return self._data_list_2_value(index, "mono_mass")
 
-    def name2composition(self, unimod_name):
+    def name2composition_list(self, unimod_name):
         """
-        Converts unimod name to unimod composition
+        Converts unimod name to all matching unimod compositions
 
         Args:
             unimod_name (str): name of modification (as named in unimod)
 
         Returns:
-            dict: Unimod elemental composition
+            list: list of Unimod compositions
         """
-        return self._map_key_2_index_2_value(unimod_name, "element")
+        list_2_return = []
+        index_list = self.mapper.get(unimod_name, None)
+        if index_list is not None:
+            for index in index_list:
+                list_2_return.append(self._data_list_2_value(index, "element"))
+        return list_2_return
 
-    def name2id(self, unimod_name):
+    def name2first_composition(self, unimod_name):
         """
-        Converts unimod name to unimod ID
+        Converts unimod name to unimod composition returning the first instance only
 
         Args:
             unimod_name (str): name of modification (as named in unimod)
 
         Returns:
-            int: Unimod ID
+            list: list of tuples (specificity sites, classification)Unimod mono isotopic mass
         """
-        return self._map_key_2_index_2_value(unimod_name, "unimodID")
+        index = min(self.mapper.get(unimod_name, None))
+        return self._data_list_2_value(index, "element")
+
+    def name2id_list(self, unimod_name):
+        """
+        Converts unimod name to unimod id
+
+        Args:
+            unimod_name (str): name of modification (as named in unimod)
+
+        Returns:
+            list: list of Unimod mono isotopic masses
+        """
+        list_2_return = []
+        index_list = self.mapper.get(unimod_name, None)
+        if index_list is not None:
+            for index in index_list:
+                list_2_return.append(self._data_list_2_value(index, "unimodID"))
+        return list_2_return
+
+    def name2first_id(self, unimod_name):
+        """
+        Converts unimod name to unimod ID returning the first instance
+
+        Args:
+            unimod_name (str): name of modification (as named in unimod)
+
+        Returns:
+            float: Unimod mono isotopic mass
+        """
+        index = min(self.mapper.get(unimod_name, None))
+        return self._data_list_2_value(index, "unimodID")
 
     def name2specificity_list(self, unimod_name):
         """
@@ -246,14 +288,16 @@ class UnimodMapper(object):
         Returns:
             list: list of tuples (specificity sites, classification)
         """
-        list_2_return = None
-        index = self.mapper.get(unimod_name, None)
-        if index is not None:
-            list_2_return = self._data_list_2_value(index, "specificity")
+        list_2_return = []
+        index_list = self.mapper.get(unimod_name, None)
+        if index_list is not None:
+            for index in index_list:
+                list_2_return.append(self._data_list_2_value(index, "specificity"))
+
         return list_2_return
 
     # unimodid 2 ....
-    def id2mass(self, unimod_id):
+    def id2mass_list(self, unimod_id):
         """
         Converts unimod ID to unimod mass
 
@@ -265,9 +309,29 @@ class UnimodMapper(object):
         """
         if isinstance(unimod_id, int) is True:
             unimod_id = str(unimod_id)
-        return self._map_key_2_index_2_value(unimod_id, "mono_mass")
+        list_2_return = []
+        index_list = self.mapper.get(unimod_id, None)
+        if index_list is not None:
+            for index in index_list:
+                list_2_return.append(self._data_list_2_value(index, "mono_mass"))
+        return list_2_return
 
-    def id2composition(self, unimod_id):
+    def id2first_mass(self, unimod_id):
+        """
+        Converts unimod ID to mono_mass returning the first instance
+
+        Args:
+            unimod_id (int|str): identifier of modification
+
+        Returns:
+            float: Unimod mono isotopic mass
+        """
+        if isinstance(unimod_id, int) is True:
+            unimod_id = str(unimod_id)
+        index = min(self.mapper.get(unimod_id, None))
+        return self._data_list_2_value(index, "mono_mass")
+
+    def id2composition_list(self, unimod_id):
         """
         Converts unimod ID to unimod composition
 
@@ -279,9 +343,29 @@ class UnimodMapper(object):
         """
         if isinstance(unimod_id, int) is True:
             unimod_id = str(unimod_id)
-        return self._map_key_2_index_2_value(unimod_id, "element")
+        list_2_return = []
+        index_list = self.mapper.get(unimod_id, None)
+        if index_list is not None:
+            for index in index_list:
+                list_2_return.append(self._data_list_2_value(index, "element"))
+        return list_2_return
 
-    def id2name(self, unimod_id):
+    def id2first_composition(self, unimod_id):
+        """
+        Converts unimod ID to composition returning the first instance
+
+        Args:
+            unimod_id (int|str): identifier of modification
+
+        Returns:
+            dict: Unimod composition
+        """
+        if isinstance(unimod_id, int) is True:
+            unimod_id = str(unimod_id)
+        index = min(self.mapper.get(unimod_id, None))
+        return self._data_list_2_value(index, "element")
+
+    def id2name_list(self, unimod_id):
         """
         Converts unimod ID to unimod name
 
@@ -293,7 +377,27 @@ class UnimodMapper(object):
         """
         if isinstance(unimod_id, int) is True:
             unimod_id = str(unimod_id)
-        return self._map_key_2_index_2_value(unimod_id, "unimodname")
+        list_2_return = []
+        index_list = self.mapper.get(unimod_id, None)
+        if index_list is not None:
+            for index in index_list:
+                list_2_return.append(self._data_list_2_value(index, "unimodname"))
+        return list_2_return
+
+    def id2first_name(self, unimod_id):
+        """
+        Converts unimod ID to composition returning the first instance
+
+        Args:
+            unimod_id (int|str): identifier of modification
+
+        Returns:
+            dict: Unimod composition
+        """
+        if isinstance(unimod_id, int) is True:
+            unimod_id = str(unimod_id)
+        index = min(self.mapper.get(unimod_id, None))
+        return self._data_list_2_value(index, "unimodname")
 
     # mass is ambigous therefore a list is returned
     def mass2name_list(self, mass):
@@ -446,7 +550,8 @@ class UnimodMapper(object):
         index_list = self.mapper.get(composition, None)
         if index_list is not None:
             for index in index_list:
-                list_2_return.append(self._data_list_2_value(index, "unimodname"))
+                value = self._data_list_2_value(index, "unimodname")
+                list_2_return.append(value)
         return list_2_return
 
     def composition2id_list(self, composition):
@@ -464,7 +569,8 @@ class UnimodMapper(object):
         index_list = self.mapper.get(composition, None)
         if index_list is not None:
             for index in index_list:
-                list_2_return.append(self._data_list_2_value(index, "unimodID"))
+                value = self._data_list_2_value(index, "unimodID")
+                list_2_return.append(value)
         return list_2_return
 
     def composition2mass(self, composition):
@@ -512,7 +618,7 @@ class UnimodMapper(object):
             )
             return_value = None
         else:
-            return_value = self._data_list_2_value(index, return_key)
+            return_value = self._data_list_2_value(index[0], return_key)
         return return_value
 
     def _data_list_2_value(self, index, return_key):
@@ -536,7 +642,7 @@ class UnimodMapper(object):
         unimod = ET.Element("{usermod}unimod")
         modifications = ET.SubElement(unimod, "{usermod}modifications")
         mod_dicts = [modification_dict]
-        if os.path.exists(xml_file):
+        if xml_file.exists():
             data_list = self._parseXML(xml_file_list=[xml_file])
             for data_dict in data_list:
                 mod_dict = {
