@@ -145,9 +145,9 @@ class UnimodMapper(object):
                     # at least unimod.xml HAS to be available!
                     print(xml_path)
                     sys.exit(1)
-                elif xml_path.name == "usermods.xml":
+                elif xml_path.name == "usermod.xml":
                     logger.info(
-                        "No usermods.xml file found. Expected at {0}".format(xml_path)
+                        "No usermod.xml file found. Expected at {0}".format(xml_path)
                     )
                     continue
                 else:
@@ -626,7 +626,7 @@ class UnimodMapper(object):
 
     def writeXML(self, modification_dict, xml_file=None):
         """
-        Writes a unimod-style usermods.xml file in
+        Writes a unimod-style usermod.xml file in
         at the same location as the unimod.xml
 
         Args:
@@ -636,7 +636,7 @@ class UnimodMapper(object):
             'composition' (chemical composition of the modification as a dictionary {element:number})
         """
         if xml_file == None:
-            xml_file = Path(__file__).parent / "usermods.xml"
+            xml_file = Path(__file__).parent / "usermod.xml"
         else:
             xml_file = Path(xml_file)
         unimod = ET.Element("{usermod}unimod")
