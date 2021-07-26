@@ -214,8 +214,14 @@ class UnimodMapper(object):
         Returns:
             float: Unimod mono isotopic mass
         """
-        index = min(self.mapper.get(unimod_name, None))
-        return self._data_list_2_value(index, "mono_mass")
+        index = self.mapper.get(unimod_name, None)
+        if index is not None:
+            index = min(self.mapper.get(unimod_name, None))
+            rval = self._data_list_2_value(index, "mono_mass")
+        else:
+            rval = None
+        return rval
+
 
     def name2composition_list(self, unimod_name):
         """
@@ -244,8 +250,13 @@ class UnimodMapper(object):
         Returns:
             list: list of tuples (specificity sites, classification)Unimod mono isotopic mass
         """
-        index = min(self.mapper.get(unimod_name, None))
-        return self._data_list_2_value(index, "element")
+        index = self.mapper.get(unimod_name, None)
+        if index is not None:
+            index = min(self.mapper.get(unimod_name, None))
+            rval = self._data_list_2_value(index, "element")
+        else:
+            rval = None
+        return rval
 
     def name2id_list(self, unimod_name):
         """
@@ -274,8 +285,14 @@ class UnimodMapper(object):
         Returns:
             float: Unimod mono isotopic mass
         """
-        index = min(self.mapper.get(unimod_name, None))
-        return self._data_list_2_value(index, "unimodID")
+        index = self.mapper.get(unimod_name, None)
+        if index is not None:
+            index = min(self.mapper.get(unimod_name, None))
+            rval = self._data_list_2_value(index, "unimodID")
+        else:
+            rval = None
+        return rval
+
 
     def name2specificity_list(self, unimod_name):
         """
