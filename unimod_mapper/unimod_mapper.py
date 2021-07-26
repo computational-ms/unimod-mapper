@@ -345,8 +345,15 @@ class UnimodMapper(object):
         """
         if isinstance(unimod_id, int) is True:
             unimod_id = str(unimod_id)
-        index = min(self.mapper.get(unimod_id, None))
-        return self._data_list_2_value(index, "mono_mass")
+        index = self.mapper.get(unimod_id, None)
+        if index is not None:
+            index = min(self.mapper.get(unimod_id, None))
+            rval = self._data_list_2_value(index, "mono_mass")
+        else:
+            rval = None
+        return rval
+
+
 
     def id2composition_list(self, unimod_id):
         """
@@ -379,8 +386,13 @@ class UnimodMapper(object):
         """
         if isinstance(unimod_id, int) is True:
             unimod_id = str(unimod_id)
-        index = min(self.mapper.get(unimod_id, None))
-        return self._data_list_2_value(index, "element")
+        index = self.mapper.get(unimod_id, None)
+        if index is not None:
+            index = min(self.mapper.get(unimod_id, None))
+            rval = self._data_list_2_value(index, "element")
+        else:
+            rval = None
+        return rval
 
     def id2name_list(self, unimod_id):
         """
@@ -413,8 +425,13 @@ class UnimodMapper(object):
         """
         if isinstance(unimod_id, int) is True:
             unimod_id = str(unimod_id)
-        index = min(self.mapper.get(unimod_id, None))
-        return self._data_list_2_value(index, "unimodname")
+        index = self.mapper.get(unimod_id, None)
+        if index is not None:
+            index = min(self.mapper.get(unimod_id, None))
+            rval = self._data_list_2_value(index, "unimodname")
+        else:
+            rval = None
+        return rval
 
     # mass is ambigous therefore a list is returned
     def mass2name_list(self, mass):
