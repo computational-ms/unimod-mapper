@@ -114,6 +114,7 @@ class UnimodMapper(object):
                                 "unimodname": element.attrib["title"],
                                 "element": {},
                                 "specificity": [],
+                                "neutral_loss": {}
                             }
                         elif element.tag.endswith("}delta"):
                             collect_element = True
@@ -128,8 +129,12 @@ class UnimodMapper(object):
                             classification = element.attrib["classification"]
                             if classification != "Artefact":
                                 tmp["specificity"].append((amino_acid, classification))
-                        else:
-                            pass
+                        elif element.tag.endswith("}NeutralLoss"):
+                            if element.attrib["composition"] != "0":
+                                site = tmp["specificity"][-1][0]
+                                tmp["neutral_loss"][site] = element.attrib["mono_mass"]
+                        # else:
+                        #     pass
                     else:
                         # end element
                         if element.tag.endswith("}delta"):
