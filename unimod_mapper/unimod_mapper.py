@@ -156,6 +156,13 @@ class UnimodMapper(object):
         """Set up the mapper and generate the index dict"""
         mapper = {}
         for index, unimod_data_dict in enumerate(self.data_list):
+            if unimod_data_dict["unimodname"] in mapper.keys():
+                name = unimod_data_dict["unimodname"]
+                id = unimod_data_dict["unimodID"]
+                logger.warning(
+                    f"Warning: unimod {name} (ID {id}) is duplicated"
+                )
+
             for key, value in unimod_data_dict.items():
                 if key == "element":
                     MAJORS = ["C", "H"]
@@ -176,12 +183,6 @@ class UnimodMapper(object):
                 elif key == "specificity":
                     pass
                 else:
-                    if key == "unimodID" and value in mapper.keys():
-                        name = unimod_data_dict["unimodname"]
-                        id = unimod_data_dict["unimodID"]
-                        logger.warning(
-                            f"Warning: unimod {name} (ID {id}) is duplicated"
-                        )
                     if value not in mapper.keys():
                         mapper[value] = []
                     mapper[value].append(index)
