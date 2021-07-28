@@ -688,193 +688,174 @@ class UnimodMapper(object):
         self._data_list = self._parseXML(xml_file_list=xml_file_list)
         self._mapper = self._initialize_mapper()
 
-# @staticmethod
-def map_mods(mod_list):
-    """
-    Maps modifications defined in params["modification"] using unimod.
+    def map_mods(self, mod_list):
+        """
+        Maps modifications defined in params["modification"] using unimod.
 
-    Args:
-        umeta (ursgal.umeta.UMeta): umeta object containing all run relevant
-                                    information. See _umeta_base for further info.
+        Args:
+            umeta (ursgal.umeta.UMeta): umeta object containing all run relevant
+                                        information. See _umeta_base for further info.
 
-    Returns:
-        mapped_mods["mods"] (dict): dict with modifications mapped with unimod
+        Returns:
+            mapped_mods["mods"] (dict): dict with modifications mapped with unimod
 
-    Examples:
+        Examples:
 
-         >>> [
-         ...    "M,opt,any,Oxidation",        # Met oxidation
-         ...    "C,fix,any,Carbamidomethyl",  # Carbamidomethylation
-         ...    "*,opt,Prot-N-term,Acetyl"    # N-Acteylation
-         ... ]
+             >>> [
+             ...    "M,opt,any,Oxidation",        # Met oxidation
+             ...    "C,fix,any,Carbamidomethyl",  # Carbamidomethylation
+             ...    "*,opt,Prot-N-term,Acetyl"    # N-Acteylation
+             ... ]
 
-        mod_dict = {
-                "amino_acid": "M",
-                "mod_option": "opt",
-                "position": "any",
-                "unimod_name": "Oxidation",
-                "unimod_id": None,
-                "chemical_formula": None, #Hill notation
-                "neutral_loss": 0.0 #can be user-defined value, "unimod" to use the
-                default from unimod (if existing)
+            mod_dict = {
+                    "amino_acid": "M",
+                    "mod_option": "opt",
+                    "position": "any",
+                    "unimod_name": "Oxidation",
+                    "unimod_id": None,
+                    "chemical_formula": None, #Hill notation
+                    "neutral_loss": 0.0 #can be user-defined value, "unimod" to use the
+                    default from unimod (if existing)
+                }
+
+        """
+
+        tmp_dict = {"fix": [], "opt": []}
+
+        for index, mod in enumerate(mod_list):
+
+            # TODO: make a query if any key from the mod dict is not suitable with ursgal!
+
+            allowed_keys = ["amino_acid", "mod_option", "position", "unimod_name",
+                            "unimod_id", "chemical_formula", "neutral_loss"]
+
+            wrong_keys = []
+            for key in mod.keys():
+                if key not in allowed_keys:
+                    wrong_keys.append(key)
+
+            if wrong_keys != []:
+                logger.error("The provided format of the modification is not correct. "
+                             "Please check if you are using the correct dict keys!")
+
+            assert any(
+                key not in allowed_keys for key in mod.keys()
+            ), """
+                Please provide an url, json_dict or json_file input with valid url information
+                """
+
+            if any mod.keys() is not in
+
+            # if len(mod_params) >= 6 or len(mod_params) <= 3:
+            #     logger.warning(
+            #         "For modifications, please use the ursgal_style: 'amino_acid,opt/fix,position,Unimod PSI-MS Name' or 'amino_acid,opt/fix,position,name,chemical_composition'. Continue without modification {0} ".format(
+            #             mod
+            #         )
+            #     )
+            #     print(mod_params)
+            #     continue
+
+            # aa = mod.get("amino_acid", None)
+            # aa = mod_params[0].strip()
+            # mod_option
+            # mod_option = mod_params[1].strip()
+            # pos = mod_params[2].strip()
+            unimod = False
+            unimod_id = None
+            mod_option = mod["mod_option"]
+
+            # if len(mod_params) == 4:
+            if mod.get("chemical_formula", None) is None:
+                try:
+                    unimod_id = mod["unimod_id"]
+                    unimod_name = self.id2name_list(unimod_id)
+                    mass = self.id2mass_list(unimod_id)
+                    composition = self.id2composition_list(unimod_id)
+                    if unimod_name == []:
+                        logger.warning(
+                            "'{1}' is not a Unimod modification please change it to a valid Unimod Accession # or PSI-MS Unimod Name or add the chemical composition hill notation (including 1) e.g.: H-1N1O2 ursgal_style: 'amino_acid,opt/fix,position,name,chemical_composition'. Continue without modification {0} ".format(
+                                mod, unimod_id
+                            )
+                        )
+                        continue
+                    unimod = True
+                    name = unimod_name
+                except KeyError:
+                    unimod_name = mod["unimod_name"]
+                    unimod_id = self.name2id_list(unimod_name)
+                    mass = self.name2mass_list(unimod_name)
+                    composition = self.name2composition_list(unimod_name)
+                    # if unimod_id is None:
+                    if unimod_id == []:
+                        logger.warning(
+                            "'{1}' is not a Unimod modification please change it to a valid PSI-MS Unimod Name or Unimod Accession # or add the chemical composition hill notation (including 1) e.g.: H-1N1O2 ursgal_style: 'amino_acid,opt/fix,position,name,chemical_composition'. Continue without modification {0} ".format(
+                                mod, unimod_name
+                            )
+                        )
+                        continue
+                    unimod = True
+                    name = unimod_name
+            # TODO: implement the second part with the chemical_composition mapping
+            # elif len(mod_params) == 5:
+            #     name = mod_params[3].strip()
+            #     chemical_formula = mod_params[4].strip()
+            #     chemical_composition = ChemicalComposition()
+            #     chemical_composition.add_chemical_formula(chemical_formula)
+            #     composition = chemical_composition
+            #     composition_unimod_style = chemical_composition.hill_notation_unimod()
+            #     unimod_name_list = self.composition2name_list(composition_unimod_style)
+            #     unimod_id_list = self.composition2id_list(composition_unimod_style)
+            #     mass = self.composition2mass(composition_unimod_style)
+            #     for i, unimod_name in enumerate(unimod_name_list):
+            #         if unimod_name == name:
+            #             unimod_id = unimod_id_list[i]
+            #             unimod = True
+            #             break
+            #     if unimod is False and unimod_name_list != []:
+            #         logger.warning(
+            #             "'{0}' is not a Unimod modification but the chemical composition you specified is included in Unimod. Please use one of the Unimod names: {1} Continue without modification {2} ".format(
+            #                 name, unimod_name_list, mod
+            #             )
+            #         )
+            #         continue
+            #     if unimod is False and unimod_name_list == []:
+            #         logger.warning(
+            #             "'{0}' is not a Unimod modification trying to continue with the chemical composition you specified. This is not working with OMSSA so far".format(
+            #                 mod,
+            #             )
+            #         )
+            #         mass = chemical_composition.mass()
+            #         # write new userdefined modifications Xml in unimod style
+
+            mod_dict = {
+                "_id": index,
+                "aa": mod["amino_acid"],
+                "mass": mass,
+                "pos": mod["position"],
+                "name": unimod_name,
+                "composition": composition,
+                "org": mod,
+                "id": unimod_id,
+                "unimod": unimod,
             }
 
+            # refactor the dict such as the first element of the list will be taken.
+            # Raise a warning if list has more than 1 entry!
 
-         >>> [
-         ...    "M,opt,any,Oxidation",        # Met oxidation
-         ...    "C,fix,any,Carbamidomethyl",  # Carbamidomethylation
-         ...    "*,opt,Prot-N-term,Acetyl"    # N-Acteylation
-         ... ]
-
-
-    """
-    # ls_dict = [{"amino_acid": "M",
-    #             "mod_option": "opt",
-    #             "position": "any",
-    #             "unimod_name": "Oxidation"},
-    #            {"amino_acid": "C",
-    #             "mod_option": "fix",
-    #             "position": "any",
-    #             "unimod_name": "Carbamidomethyl"},
-    #            {"amino_acid": "*",
-    #             "mod_option": "opt",
-    #             "position": "Prot-N-term",
-    #             "unimod_name": "Acetyl"}]
-
-    # breakpoint()
-    umama = UnimodMapper()
-    tmp_dict = {"fix": [], "opt": []}
-    # tmp_dict["mods"] = {"fix": [], "opt": []}
-    # udict = {}
-    # udict["mapped_mods"] = {}
-    # udict["mapped_mods"]["mods"] = {"fix": [], "opt": []}
-    # if isinstance(mod_input, list):
-    #     mod_list = mod_input
-    # elif isinstance(mod_input, dict):
-    #     sdf
-    # else:
-    #     logger.error("The supplied modification input is neither list or dict. Please "
-    #                  "cha")
-    #
-    # try:
-    #     mod_list = mod_dict.get("modifications", [])
-    # except KeyError:
-    #     mod_list = mod_dict["parameters"].get("modifications", [])
-
-    for index, mod in enumerate(mod_list):
-        # mod_params = mod.split(",")
-
-        # TODO: make a query if any key from the mod dict is not suitable with ursgal!
-        # if len(mod_params) >= 6 or len(mod_params) <= 3:
-        #     logger.warning(
-        #         "For modifications, please use the ursgal_style: 'amino_acid,opt/fix,position,Unimod PSI-MS Name' or 'amino_acid,opt/fix,position,name,chemical_composition'. Continue without modification {0} ".format(
-        #             mod
-        #         )
-        #     )
-        #     print(mod_params)
-        #     continue
-
-        # aa = mod.get("amino_acid", None)
-        # aa = mod_params[0].strip()
-        # mod_option
-        # mod_option = mod_params[1].strip()
-        # pos = mod_params[2].strip()
-        unimod = False
-        unimod_id = None
-        mod_option = mod["mod_option"]
-
-        # if len(mod_params) == 4:
-        if mod.get("chemical_formula", None) is None:
-            try:
-                unimod_id = mod["unimod_id"]
-                unimod_name = umama.id2name_list(unimod_id)
-                mass = umama.id2mass_list(unimod_id)
-                composition = umama.id2composition_list(unimod_id)
-                if unimod_name == []:
-                    logger.warning(
-                        "'{1}' is not a Unimod modification please change it to a valid Unimod Accession # or PSI-MS Unimod Name or add the chemical composition hill notation (including 1) e.g.: H-1N1O2 ursgal_style: 'amino_acid,opt/fix,position,name,chemical_composition'. Continue without modification {0} ".format(
-                            mod, unimod_id
+            for obj in ["mass", "composition", "name", "id"]:
+                if isinstance(mod_dict[obj], list):
+                    if len(mod_dict[obj]) >= 1:
+                        mod_dict[obj] = mod_dict[obj][0]
+                    elif len(mod_dict[obj]) > 1:
+                        # mod_dict[obj] = mod_dict[obj][0]
+                        logger.warning(
+                            f"More than 1 {obj} was mapped, due to multiple entries for "
+                            f"{mod_dict['org']}. The {obj} was assigned to "
+                            f"{mod_dict[obj]}."
                         )
-                    )
-                    continue
-                unimod = True
-                name = unimod_name
-            except KeyError:
-                unimod_name = mod["unimod_name"]
-                unimod_id = umama.name2id_list(unimod_name)
-                mass = umama.name2mass_list(unimod_name)
-                composition = umama.name2composition_list(unimod_name)
-                # if unimod_id is None:
-                if unimod_id == []:
-                    logger.warning(
-                        "'{1}' is not a Unimod modification please change it to a valid PSI-MS Unimod Name or Unimod Accession # or add the chemical composition hill notation (including 1) e.g.: H-1N1O2 ursgal_style: 'amino_acid,opt/fix,position,name,chemical_composition'. Continue without modification {0} ".format(
-                            mod, unimod_name
-                        )
-                    )
-                    continue
-                unimod = True
-                name = unimod_name
-        # TODO: implement the second part with the chemical_composition mapping
-        # elif len(mod_params) == 5:
-        #     name = mod_params[3].strip()
-        #     chemical_formula = mod_params[4].strip()
-        #     chemical_composition = ChemicalComposition()
-        #     chemical_composition.add_chemical_formula(chemical_formula)
-        #     composition = chemical_composition
-        #     composition_unimod_style = chemical_composition.hill_notation_unimod()
-        #     unimod_name_list = umama.composition2name_list(composition_unimod_style)
-        #     unimod_id_list = umama.composition2id_list(composition_unimod_style)
-        #     mass = umama.composition2mass(composition_unimod_style)
-        #     for i, unimod_name in enumerate(unimod_name_list):
-        #         if unimod_name == name:
-        #             unimod_id = unimod_id_list[i]
-        #             unimod = True
-        #             break
-        #     if unimod is False and unimod_name_list != []:
-        #         logger.warning(
-        #             "'{0}' is not a Unimod modification but the chemical composition you specified is included in Unimod. Please use one of the Unimod names: {1} Continue without modification {2} ".format(
-        #                 name, unimod_name_list, mod
-        #             )
-        #         )
-        #         continue
-        #     if unimod is False and unimod_name_list == []:
-        #         logger.warning(
-        #             "'{0}' is not a Unimod modification trying to continue with the chemical composition you specified. This is not working with OMSSA so far".format(
-        #                 mod,
-        #             )
-        #         )
-        #         mass = chemical_composition.mass()
-        #         # write new userdefined modifications Xml in unimod style
-
-        mod_dict = {
-            "_id": index,
-            "aa": mod["amino_acid"],
-            "mass": mass,
-            "pos": mod["position"],
-            "name": unimod_name,
-            "composition": composition,
-            "org": mod,
-            "id": unimod_id,
-            "unimod": unimod,
-        }
-
-        # refactor the dict such as the first element of the list will be taken.
-        # Raise a warning if list has more than 1 entry!
-
-        for obj in ["mass", "composition", "name", "id"]:
-            if isinstance(mod_dict[obj], list):
-                if len(mod_dict[obj]) >= 1:
-                    mod_dict[obj] = mod_dict[obj][0]
-                elif len(mod_dict[obj]) > 1:
-                    # mod_dict[obj] = mod_dict[obj][0]
-                    logger.warning(
-                        f"More than 1 {obj} was mapped, due to multiple entries for "
-                        f"{mod_dict['org']}. The {obj} was assigned to "
-                        f"{mod_dict[obj]}."
-                    )
-        tmp_dict[mod_option].append(mod_dict)
-        # output_dict = {"mods": tmp_dict}
-    return tmp_dict
+            tmp_dict[mod_option].append(mod_dict)
+            # output_dict = {"mods": tmp_dict}
+        return tmp_dict
 
 
 if __name__ == "__main__":
