@@ -114,7 +114,7 @@ class UnimodMapper(object):
                                 "unimodname": element.attrib["title"],
                                 "element": {},
                                 "specificity": [],
-                                "neutral_loss": {}
+                                "neutral_loss": []
                             }
                         elif element.tag.endswith("}delta"):
                             collect_element = True
@@ -131,9 +131,14 @@ class UnimodMapper(object):
                                 tmp["specificity"].append((amino_acid, classification))
                         elif element.tag.endswith("}NeutralLoss"):
                             if element.attrib["composition"] != "0":
-                                site = tmp["specificity"][-1][0]
-                                tmp["neutral_loss"][site] = element.attrib["mono_mass"]
-                        # else:
+                                amino_acid = tmp["specificity"][-1][0]
+                                neutral_loss = element.attrib["mono_mass"]
+                                tmp["neutral_loss"].append((amino_acid, neutral_loss))
+                        # elif element.tag.endswith("}NeutralLoss"):
+                        #     if element.attrib["composition"] != "0":
+                        #         site = tmp["specificity"][-1][0]
+                        #         tmp["neutral_loss"][site] = element.attrib["mono_mass"]
+                        # # else:
                         #     pass
                     else:
                         # end element
@@ -185,6 +190,8 @@ class UnimodMapper(object):
                         mapper[hill_notation] = []
                     mapper[hill_notation].append(index)
                 elif key == "specificity":
+                    pass
+                elif key == "neutral_loss":
                     pass
                 else:
                     if value not in mapper.keys():
