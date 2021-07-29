@@ -747,7 +747,7 @@ class UnimodMapper(object):
 
             if mod.get("composition", None) is None:
                 try:
-                    unimod_id = mod["id"]
+                    unimod_id = int(mod["id"])
                     unimod_name = self.id2name_list(unimod_id)
                     mass = self.id2mass_list(unimod_id)
                     composition = self.id2composition_list(unimod_id)
@@ -772,37 +772,36 @@ class UnimodMapper(object):
                         )
                         continue
                     unimod = True
-            # TODO: implement the second part with the chemical_composition mapping
-            # elif len(mod_params) == 5:
-            #     name = mod_params[3].strip()
-            #     chemical_formula = mod_params[4].strip()
-            #     chemical_composition = ChemicalComposition()
-            #     chemical_composition.add_chemical_formula(chemical_formula)
-            #     composition = chemical_composition
-            #     composition_unimod_style = chemical_composition.hill_notation_unimod()
-            #     unimod_name_list = self.composition2name_list(composition_unimod_style)
-            #     unimod_id_list = self.composition2id_list(composition_unimod_style)
-            #     mass = self.composition2mass(composition_unimod_style)
-            #     for i, unimod_name in enumerate(unimod_name_list):
-            #         if unimod_name == name:
-            #             unimod_id = unimod_id_list[i]
-            #             unimod = True
-            #             break
-            #     if unimod is False and unimod_name_list != []:
-            #         logger.warning(
-            #             "'{0}' is not a Unimod modification but the chemical composition you specified is included in Unimod. Please use one of the Unimod names: {1} Continue without modification {2} ".format(
-            #                 name, unimod_name_list, mod
-            #             )
-            #         )
-            #         continue
-            #     if unimod is False and unimod_name_list == []:
-            #         logger.warning(
-            #             "'{0}' is not a Unimod modification trying to continue with the chemical composition you specified. This is not working with OMSSA so far".format(
-            #                 mod,
-            #             )
-            #         )
-            #         mass = chemical_composition.mass()
-            #         # write new userdefined modifications Xml in unimod style
+            else:
+                unimod_name = mod["name"]
+                chemical_formula = mod["composition"]
+                chemical_composition = ChemicalComposition()
+                chemical_composition.add_chemical_formula(chemical_formula)
+                composition = chemical_composition
+                composition_unimod_style = chemical_composition.hill_notation_unimod()
+                unimod_name_list = self.composition2name_list(composition_unimod_style)
+                unimod_id_list = self.composition2id_list(composition_unimod_style)
+                mass = self.composition2mass(composition_unimod_style)
+                for i, name in enumerate(unimod_name_list):
+                    if name == unimod_name:
+                        unimod_id = unimod_id_list[i]
+                        unimod = True
+                        break
+                if unimod is False and unimod_name_list != []:
+                    logger.warning(
+                        "'{0}' is not a Unimod modification but the chemical composition you specified is included in Unimod. Please use one of the Unimod names: {1} Continue without modification {2} ".format(
+                            unimod_name, unimod_name_list, mod
+                        )
+                    )
+                    continue
+                if unimod is False and unimod_name_list == []:
+                    logger.warning(
+                        "'{0}' is not a Unimod modification trying to continue with the chemical composition you specified. This is not working with OMSSA so far".format(
+                            mod,
+                        )
+                    )
+                    mass = chemical_composition.mass()
+                    # write new userdefined modifications Xml in unimod style
 
             mod_dict = copy.deepcopy(mod)
             mod_dict.pop("type")
