@@ -22,6 +22,7 @@ import codecs
 import xml.etree.ElementTree as ET
 import xml.dom.minidom as xmldom
 import requests
+import copy
 
 from pathlib import Path
 from loguru import logger
@@ -708,14 +709,12 @@ class UnimodMapper(object):
              ... ]
 
             mod_dict = {
-                    "amino_acid": "M",
-                    "mod_option": "opt",
-                    "position": "any",
-                    "unimod_name": "Oxidation",
-                    "unimod_id": None,
-                    "chemical_formula": None, #Hill notation
-                    "neutral_loss": 0.0 #can be user-defined value, "unimod" to use the
-                    default from unimod (if existing)
+                    "aa": "M", # specify the modified amino acid as a single letter, use '*' if the amino acid is variable
+                    "type": "opt", # specify if it is a fixed (fix) or potential (opt) modification
+                    "position": "any", # specify the position within the protein/peptide (Prot-N-term, Prot-C-term), use 'any' if the positon is variable
+                    "name": "Oxidation", # specify the unimod PSI-MS Name (alternative to id)
+                    "id": None, # specify the unimod Accession (alternative to name)
+                    "composition": None, # For user-defined mods composition needs to be given as a Hill notation
                 }
 
         """
@@ -724,36 +723,18 @@ class UnimodMapper(object):
 
         for index, mod in enumerate(mod_list):
 
-            # TODO: make a query if any key from the mod dict is not suitable with ursgal!
-
-            allowed_keys = ["amino_acid", "mod_option", "position", "unimod_name",
-                            "unimod_id", "chemical_formula", "neutral_loss"]
-
+            # Check if any key from the mod dict is not valid!
+            allowed_keys = ["aa", "type", "position", "name", "id", "composition"]
             wrong_keys = []
             for key in mod.keys():
                 if key not in allowed_keys:
                     wrong_keys.append(key)
-
             if wrong_keys != []:
-                logger.error("The provided format of the modification is not correct. "
-                             "Please check if you are using the correct dict keys!")
-
-            assert any(
-                key not in allowed_keys for key in mod.keys()
-            ), """
-                Please provide an url, json_dict or json_file input with valid url information
-                """
-
-            if any mod.keys() is not in
-
-            # if len(mod_params) >= 6 or len(mod_params) <= 3:
-            #     logger.warning(
-            #         "For modifications, please use the ursgal_style: 'amino_acid,opt/fix,position,Unimod PSI-MS Name' or 'amino_acid,opt/fix,position,name,chemical_composition'. Continue without modification {0} ".format(
-            #             mod
-            #         )
-            #     )
-            #     print(mod_params)
-            #     continue
+                logger.warning(f"One or more used keys are not supported. Please "
+                             f"confirm that you are using keys from {allowed_keys} "
+                             f"within your mod_dict. Continue without {mod}!")
+                # print(mod)
+                continue
 
             # aa = mod.get("amino_acid", None)
             # aa = mod_params[0].strip()
@@ -762,12 +743,11 @@ class UnimodMapper(object):
             # pos = mod_params[2].strip()
             unimod = False
             unimod_id = None
-            mod_option = mod["mod_option"]
+            type = mod["type"]
 
-            # if len(mod_params) == 4:
-            if mod.get("chemical_formula", None) is None:
+            if mod.get("composition", None) is None:
                 try:
-                    unimod_id = mod["unimod_id"]
+                    unimod_id = mod["id"]
                     unimod_name = self.id2name_list(unimod_id)
                     mass = self.id2mass_list(unimod_id)
                     composition = self.id2composition_list(unimod_id)
@@ -779,13 +759,11 @@ class UnimodMapper(object):
                         )
                         continue
                     unimod = True
-                    name = unimod_name
                 except KeyError:
-                    unimod_name = mod["unimod_name"]
+                    unimod_name = mod["name"]
                     unimod_id = self.name2id_list(unimod_name)
                     mass = self.name2mass_list(unimod_name)
                     composition = self.name2composition_list(unimod_name)
-                    # if unimod_id is None:
                     if unimod_id == []:
                         logger.warning(
                             "'{1}' is not a Unimod modification please change it to a valid PSI-MS Unimod Name or Unimod Accession # or add the chemical composition hill notation (including 1) e.g.: H-1N1O2 ursgal_style: 'amino_acid,opt/fix,position,name,chemical_composition'. Continue without modification {0} ".format(
@@ -794,7 +772,6 @@ class UnimodMapper(object):
                         )
                         continue
                     unimod = True
-                    name = unimod_name
             # TODO: implement the second part with the chemical_composition mapping
             # elif len(mod_params) == 5:
             #     name = mod_params[3].strip()
@@ -827,9 +804,11 @@ class UnimodMapper(object):
             #         mass = chemical_composition.mass()
             #         # write new userdefined modifications Xml in unimod style
 
-            mod_dict = {
+            mod_dict = copy.deepcopy(mod)
+            mod_dict.pop("type")
+            mod_dict.update({
                 "_id": index,
-                "aa": mod["amino_acid"],
+                "aa": mod["aa"],
                 "mass": mass,
                 "pos": mod["position"],
                 "name": unimod_name,
@@ -837,11 +816,10 @@ class UnimodMapper(object):
                 "org": mod,
                 "id": unimod_id,
                 "unimod": unimod,
-            }
+            })
 
             # refactor the dict such as the first element of the list will be taken.
             # Raise a warning if list has more than 1 entry!
-
             for obj in ["mass", "composition", "name", "id"]:
                 if isinstance(mod_dict[obj], list):
                     if len(mod_dict[obj]) >= 1:
@@ -853,7 +831,7 @@ class UnimodMapper(object):
                             f"{mod_dict['org']}. The {obj} was assigned to "
                             f"{mod_dict[obj]}."
                         )
-            tmp_dict[mod_option].append(mod_dict)
+            tmp_dict[type].append(mod_dict)
             # output_dict = {"mods": tmp_dict}
         return tmp_dict
 
