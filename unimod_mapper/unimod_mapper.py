@@ -691,36 +691,36 @@ class UnimodMapper(object):
 
     def map_mods(self, mod_list):
         """
-        Maps modifications defined in params["modification"] using unimod.
+        Maps modifications defined in params["modification"] using unimod. Using the
+        dict format for the mods, the dict can be adjusted depending on the purpose of
+        the mapping. Moreover, it can only have the minimal amound of items, or e.g.
+        engine-specific ones. At the end the mapped vallues will be updated to the
+        original dict.
 
         Args:
-            umeta (ursgal.umeta.UMeta): umeta object containing all run relevant
-                                        information. See _umeta_base for further info.
+            mod_list (list): list of mod_dicts containing all relevant info about a
+                             given modification
 
         Returns:
-            mapped_mods["mods"] (dict): dict with modifications mapped with unimod
+            rdict (dict): dict with mod types as keys and corresponding lists of
+                             mod dicts mapped to unimod
 
         Examples:
 
-             >>> [
-             ...    "M,opt,any,Oxidation",        # Met oxidation
-             ...    "C,fix,any,Carbamidomethyl",  # Carbamidomethylation
-             ...    "*,opt,Prot-N-term,Acetyl"    # N-Acteylation
-             ... ]
-
-            mod_dict = {
-                    "aa": "M", # specify the modified amino acid as a single letter, use '*' if the amino acid is variable
-                    "type": "opt", # specify if it is a fixed (fix) or potential (opt) modification
-                    "position": "any", # specify the position within the protein/peptide (Prot-N-term, Prot-C-term), use 'any' if the positon is variable
-                    "name": "Oxidation", # specify the unimod PSI-MS Name (alternative to id)
-                    "id": None, # specify the unimod Accession (alternative to name)
-                    "composition": None, # For user-defined mods composition needs to be given as a Hill notation
+            mod_list = [
+                {
+                    "aa": "M",              # specify the modified amino acid as a single letter, use '*' if the amino acid is variable
+                    "type": "opt",          # specify if it is a fixed (fix) or potential (opt) modification
+                    "position": "any",      # specify the position within the protein/peptide (Prot-N-term, Prot-C-term), use 'any' if the positon is variable
+                    "name": "Oxidation",    # specify the unimod PSI-MS Name (alternative to id)
+                    "id": None,             # specify the unimod Accession (alternative to name)
+                    "composition": None,    # For user-defined mods composition needs to be given as a Hill notation
                 }
+            ]
 
         """
 
-        tmp_dict = {"fix": [], "opt": []}
-
+        rdict = {"fix": [], "opt": []}
         for index, mod in enumerate(mod_list):
 
             # Check if any key from the mod dict is not valid!
@@ -736,11 +736,6 @@ class UnimodMapper(object):
                 # print(mod)
                 continue
 
-            # aa = mod.get("amino_acid", None)
-            # aa = mod_params[0].strip()
-            # mod_option
-            # mod_option = mod_params[1].strip()
-            # pos = mod_params[2].strip()
             unimod = False
             unimod_id = None
             type = mod["type"]
@@ -830,9 +825,8 @@ class UnimodMapper(object):
                             f"{mod_dict['org']}. The {obj} was assigned to "
                             f"{mod_dict[obj]}."
                         )
-            tmp_dict[type].append(mod_dict)
-            # output_dict = {"mods": tmp_dict}
-        return tmp_dict
+            rdict[type].append(mod_dict)
+        return rdict
 
 
 if __name__ == "__main__":
