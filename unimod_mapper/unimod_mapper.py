@@ -145,9 +145,9 @@ class UnimodMapper(object):
                     # at least unimod.xml HAS to be available!
                     print(xml_path)
                     sys.exit(1)
-                elif xml_path.name == "usermods.xml":
+                elif xml_path.name == "usermod.xml":
                     logger.info(
-                        "No usermods.xml file found. Expected at {0}".format(xml_path)
+                        "No usermod.xml file found. Expected at {0}".format(xml_path)
                     )
                     continue
                 else:
@@ -214,8 +214,14 @@ class UnimodMapper(object):
         Returns:
             float: Unimod mono isotopic mass
         """
-        index = min(self.mapper.get(unimod_name, None))
-        return self._data_list_2_value(index, "mono_mass")
+        index_list = self.mapper.get(unimod_name, None)
+        if index_list is not None:
+            index = min(index_list)
+            rval = self._data_list_2_value(index, "mono_mass")
+        else:
+            rval = None
+        return rval
+
 
     def name2composition_list(self, unimod_name):
         """
@@ -244,8 +250,13 @@ class UnimodMapper(object):
         Returns:
             list: list of tuples (specificity sites, classification)Unimod mono isotopic mass
         """
-        index = min(self.mapper.get(unimod_name, None))
-        return self._data_list_2_value(index, "element")
+        index_list = self.mapper.get(unimod_name, None)
+        if index_list is not None:
+            index = min(index_list)
+            rval = self._data_list_2_value(index, "element")
+        else:
+            rval = None
+        return rval
 
     def name2id_list(self, unimod_name):
         """
@@ -274,8 +285,14 @@ class UnimodMapper(object):
         Returns:
             float: Unimod mono isotopic mass
         """
-        index = min(self.mapper.get(unimod_name, None))
-        return self._data_list_2_value(index, "unimodID")
+        index_list = self.mapper.get(unimod_name, None)
+        if index_list is not None:
+            index = min(index_list)
+            rval = self._data_list_2_value(index, "unimodID")
+        else:
+            rval = None
+        return rval
+
 
     def name2specificity_list(self, unimod_name):
         """
@@ -328,8 +345,15 @@ class UnimodMapper(object):
         """
         if isinstance(unimod_id, int) is True:
             unimod_id = str(unimod_id)
-        index = min(self.mapper.get(unimod_id, None))
-        return self._data_list_2_value(index, "mono_mass")
+        index_list = self.mapper.get(unimod_id, None)
+        if index_list is not None:
+            index = min(index_list)
+            rval = self._data_list_2_value(index, "mono_mass")
+        else:
+            rval = None
+        return rval
+
+
 
     def id2composition_list(self, unimod_id):
         """
@@ -362,8 +386,13 @@ class UnimodMapper(object):
         """
         if isinstance(unimod_id, int) is True:
             unimod_id = str(unimod_id)
-        index = min(self.mapper.get(unimod_id, None))
-        return self._data_list_2_value(index, "element")
+        index_list = self.mapper.get(unimod_id, None)
+        if index_list is not None:
+            index = min(index_list)
+            rval = self._data_list_2_value(index, "element")
+        else:
+            rval = None
+        return rval
 
     def id2name_list(self, unimod_id):
         """
@@ -396,8 +425,13 @@ class UnimodMapper(object):
         """
         if isinstance(unimod_id, int) is True:
             unimod_id = str(unimod_id)
-        index = min(self.mapper.get(unimod_id, None))
-        return self._data_list_2_value(index, "unimodname")
+        index_list = self.mapper.get(unimod_id, None)
+        if index_list is not None:
+            index = min(index_list)
+            rval = self._data_list_2_value(index, "unimodname")
+        else:
+            rval = None
+        return rval
 
     # mass is ambigous therefore a list is returned
     def mass2name_list(self, mass):
@@ -626,7 +660,7 @@ class UnimodMapper(object):
 
     def writeXML(self, modification_dict, xml_file=None):
         """
-        Writes a unimod-style usermods.xml file in
+        Writes a unimod-style usermod.xml file in
         at the same location as the unimod.xml
 
         Args:
@@ -636,7 +670,7 @@ class UnimodMapper(object):
             'composition' (chemical composition of the modification as a dictionary {element:number})
         """
         if xml_file == None:
-            xml_file = Path(__file__).parent / "usermods.xml"
+            xml_file = Path(__file__).parent / "usermod.xml"
         else:
             xml_file = Path(xml_file)
         unimod = ET.Element("{usermod}unimod")
