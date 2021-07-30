@@ -724,7 +724,8 @@ class UnimodMapper(object):
         for index, mod in enumerate(mod_list):
 
             # Check if any key from the mod dict is not valid!
-            allowed_keys = ["aa", "type", "position", "name", "id", "composition"]
+            allowed_keys = ["aa", "type", "position", "name", "id", "composition",
+                            "max_num_per_peptide", "intern_dist", "required", "neutral_loss"]
             wrong_keys = []
             for key in mod.keys():
                 if key not in allowed_keys:
