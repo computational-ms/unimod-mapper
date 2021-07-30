@@ -861,17 +861,20 @@ class UnimodMapper(object):
 
             # refactor the dict such as the first element of the list will be taken.
             # Raise a warning if list has more than 1 entry!
-            for obj in list(mod_dict.keys()):
-                if isinstance(mod_dict[obj], list):
-                    if len(mod_dict[obj]) >= 1:
-                        mod_dict[obj] = mod_dict[obj][0]
-                    elif len(mod_dict[obj]) > 1:
-                        # mod_dict[obj] = mod_dict[obj][0]
-                        logger.warning(
-                            f"More than 1 {obj} was mapped, due to multiple entries for "
-                            f"{mod_dict['org']}. The {obj} was assigned to "
-                            f"{mod_dict[obj]}."
-                        )
+            # The double check allows to only modify those lists that were generated
+            # by the x2x_list functions, but accept lists in other mod_params
+            for obj in ["mass", "composition", "name", "id", "neutral_loss"]:
+                if obj in list(mod_dict.keys()):
+                    if isinstance(mod_dict[obj], list):
+                        if len(mod_dict[obj]) >= 1:
+                            mod_dict[obj] = mod_dict[obj][0]
+                        elif len(mod_dict[obj]) > 1:
+                            # mod_dict[obj] = mod_dict[obj][0]
+                            logger.warning(
+                                f"More than 1 {obj} was mapped, due to multiple entries for "
+                                f"{mod_dict['org']}. The {obj} was assigned to "
+                                f"{mod_dict[obj]}."
+                            )
             rdict[type].append(mod_dict)
         return rdict
 
