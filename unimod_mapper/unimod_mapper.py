@@ -290,6 +290,24 @@ class UnimodMapper(object):
         index = min(self.mapper.get(unimod_name, None))
         return self._data_list_2_value(index, "unimodID")
 
+    def name2nl_list(self, unimod_name):
+        """
+        Converts unimod name to neutral_loss
+
+        Args:
+            unimod_name (str): name of modification (as named in unimod)
+
+        Returns:
+            list: list of Unimod mono isotopic masses
+        """
+        list_2_return = []
+        index_list = self.mapper.get(unimod_name, None)
+        if index_list is not None:
+            for index in index_list:
+                list_2_return.append(self._data_list_2_value(index, "neutral_loss"))
+        return list_2_return
+
+
     def name2specificity_list(self, unimod_name):
         """
         Converts unimod name to list of tuples containing the
@@ -811,6 +829,18 @@ class UnimodMapper(object):
                     mass = chemical_composition.mass()
                     # write new userdefined modifications Xml in unimod style
 
+            neutral_loss = []
+            # neutral_loss = [mod["neutral_loss"]]
+            if mod.get("neutral_loss", None) is not None:
+                if mod["neutral_loss"] == "unimod":
+                    # nl = self.name2nl_list(unimod_name)
+                    for nl_list in self.name2nl_list(unimod_name):
+                        for nl_item in nl_list:
+                            if nl_item[0] == mod["aa"]:
+                                neutral_loss.append(nl_item[1])
+                else:
+                    neutral_loss.append(mod["neutral_loss"])
+
             mod_dict = copy.deepcopy(mod)
             mod_dict.pop("type")
             mod_dict.update({
@@ -823,11 +853,12 @@ class UnimodMapper(object):
                 "org": mod,
                 "id": unimod_id,
                 "unimod": unimod,
+                "neutral_loss": neutral_loss
             })
 
             # refactor the dict such as the first element of the list will be taken.
             # Raise a warning if list has more than 1 entry!
-            for obj in ["mass", "composition", "name", "id"]:
+            for obj in ["mass", "composition", "name", "id", "neutral_loss"]:
                 if isinstance(mod_dict[obj], list):
                     if len(mod_dict[obj]) >= 1:
                         mod_dict[obj] = mod_dict[obj][0]

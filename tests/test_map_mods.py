@@ -92,6 +92,35 @@ mod_dict_id_not_in_unimod = {
     },
 }
 
+mod_dict_nl = {
+    "ufiles": "",
+    "parameters": {
+        "modifications": [
+            {
+                "aa": "M",
+                "type": "opt",
+                "position": "any",
+                "name": "Oxidation",
+                "neutral_loss": 0.0,
+            },
+            {
+                "aa": "C",
+                "type": "fix",
+                "position": "any",
+                "name": "Carbamidomethyl",
+                "neutral_loss": "unimod",
+            },
+            {
+                "aa": "M",
+                "type": "fix",
+                "position": "any",
+                "name": "Carbamidomethyl",
+                "neutral_loss": "unimod",
+            },
+        ]
+    },
+}
+
 unimod_dict = {
     "fix": [
         {
@@ -189,6 +218,70 @@ unimod_dict_id = {
     ],
 }
 
+unimod_dict_with_nl = {
+    "fix": [
+        {
+            "aa": "C",
+            "position": "any",
+            "name": "Carbamidomethyl",
+            "neutral_loss": [],
+            "_id": 1,
+            "mass": 57.021464,
+            "pos": "any",
+            "composition": {"H": 3, "C": 2, "N": 1, "O": 1},
+            "org": {
+                "aa": "C",
+                "type": "fix",
+                "position": "any",
+                "name": "Carbamidomethyl",
+                "neutral_loss": "unimod",
+            },
+            "id": "4",
+            "unimod": True,
+        },
+        {
+            "aa": "M",
+            "position": "any",
+            "name": "Carbamidomethyl",
+            "neutral_loss": "105.024835",
+            "_id": 2,
+            "mass": 57.021464,
+            "pos": "any",
+            "composition": {"H": 3, "C": 2, "N": 1, "O": 1},
+            "org": {
+                "aa": "M",
+                "type": "fix",
+                "position": "any",
+                "name": "Carbamidomethyl",
+                "neutral_loss": "unimod",
+            },
+            "id": "4",
+            "unimod": True,
+        },
+    ],
+    "opt": [
+        {
+            "aa": "M",
+            "position": "any",
+            "name": "Oxidation",
+            "neutral_loss": 0.0,
+            "_id": 0,
+            "mass": 15.994915,
+            "pos": "any",
+            "composition": {"O": 1},
+            "org": {
+                "aa": "M",
+                "type": "opt",
+                "position": "any",
+                "name": "Oxidation",
+                "neutral_loss": 0.0,
+            },
+            "id": "35",
+            "unimod": True,
+        }
+    ],
+}
+
 
 def test_unode_map_mods():
     # unode = ursgal.unodes["all"]["test_node_v1"]
@@ -219,3 +312,12 @@ def test_unode_map_mods_mod_not_in_unimod_by_id():
         mod_list=mod_dict_id_not_in_unimod["parameters"]["modifications"]
     )
     assert _output == {"fix": [], "opt": []}
+
+
+def test_unode_map_mods_nl():
+    # unode = ursgal.unodes["all"]["test_node_v1"]
+    # _output = unode.map_mods(mod_list=mod_dict["parameters"]["modifications"])
+    _output = UnimodMapper().map_mods(
+        mod_list=mod_dict_nl["parameters"]["modifications"]
+    )
+    assert _output == unimod_dict_with_nl
