@@ -777,13 +777,11 @@ class UnimodMapper(object):
             wrong_keys = []
             for key in mod.keys():
                 if key not in allowed_keys:
-                    wrong_keys.append(key)
-            if wrong_keys != []:
-                logger.warning(f"One or more used keys are not supported. Please "
-                             f"confirm that you are using keys from {allowed_keys} "
-                             f"within your mod_dict. Continue without {mod}!")
-                # print(mod)
-                continue
+                    logger.warning(f"One or more used keys are not supported. Please "
+                                 f"confirm that you are using keys from {allowed_keys} "
+                                 f"within your mod_dict. Continue without {mod}!")
+                    # print(mod)
+                    break
 
             unimod = False
             unimod_id = None
