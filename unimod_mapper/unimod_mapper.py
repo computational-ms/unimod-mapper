@@ -786,7 +786,10 @@ class UnimodMapper(object):
             unimod = False
             unimod_id = None
             type = mod["type"]
-
+            if type not in ["opt", "fix"]
+                logger.warning("You selected a modification type, which is not supported. Only 'fix and 'opt' " \
+                            "modifications are accepted! Please contact the unimod-mapper dev team if you wish your"
+                             "modification type to be considered.")
             if mod.get("composition", None) is None:
                 try:
                     unimod_id = int(mod["id"])
