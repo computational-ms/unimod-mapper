@@ -885,10 +885,10 @@ class UnimodMapper(object):
             for obj in ["mass", "composition", "name", "id", "neutral_loss"]:
                 if obj in list(mod_dict.keys()):
                     if isinstance(mod_dict[obj], list):
-                        if len(mod_dict[obj]) >= 1:
+                        if len(mod_dict[obj]) == 1:
                             mod_dict[obj] = mod_dict[obj][0]
                         elif len(mod_dict[obj]) > 1:
-                            # mod_dict[obj] = mod_dict[obj][0]
+                            mod_dict[obj] = mod_dict[obj][0]
                             logger.warning(
                                 f"More than 1 {obj} was mapped, due to multiple entries for "
                                 f"{mod_dict['org']}. The {obj} was assigned to "
