@@ -290,7 +290,7 @@ class UnimodMapper(object):
         index = min(self.mapper.get(unimod_name, None))
         return self._data_list_2_value(index, "unimodID")
 
-    def name2nl_list(self, unimod_name):
+    def name2neutral_loss_list(self, unimod_name):
         """
         Converts unimod name to neutral_loss
 
@@ -429,6 +429,25 @@ class UnimodMapper(object):
             unimod_id = str(unimod_id)
         index = min(self.mapper.get(unimod_id, None))
         return self._data_list_2_value(index, "unimodname")
+
+    def id2neutral_loss_list(self, unimod_name):
+        """
+        Converts unimod name to neutral_loss
+
+        Args:
+            unimod_name (str): name of modification (as named in unimod)
+
+        Returns:
+            list: list of Unimod mono isotopic masses
+        """
+        if isinstance(unimod_id, int) is True:
+            unimod_id = str(unimod_id)
+        list_2_return = []
+        index_list = self.mapper.get(unimod_id, None)
+        if index_list is not None:
+            for index in index_list:
+                list_2_return.append(self._data_list_2_value(index, "neutral_loss"))
+        return list_2_return
 
     # mass is ambigous therefore a list is returned
     def mass2name_list(self, mass):
