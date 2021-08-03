@@ -798,7 +798,7 @@ class UnimodMapper(object):
                     composition = self.id2composition_list(unimod_id)
                     if unimod_name == []:
                         logger.warning(
-                            "'{1}' is not a Unimod modification please change it to a valid Unimod Accession # or PSI-MS Unimod Name or add the chemical composition hill notation (including 1) e.g.: H-1N1O2 ursgal_style: 'amino_acid,opt/fix,position,name,chemical_composition'. Continue without modification {0} ".format(
+                            "'{1}' is not a Unimod modification please change it to a valid Unimod Accession # or PSI-MS Unimod Name or add the chemical composition as hill notation to the mod_dict, e.g: 'composition': 'H-1N1O2'. Continue without modification {0} ".format(
                                 mod, unimod_id
                             )
                         )
@@ -811,7 +811,7 @@ class UnimodMapper(object):
                     composition = self.name2composition_list(unimod_name)
                     if unimod_id == []:
                         logger.warning(
-                            "'{1}' is not a Unimod modification please change it to a valid PSI-MS Unimod Name or Unimod Accession # or add the chemical composition hill notation (including 1) e.g.: H-1N1O2 ursgal_style: 'amino_acid,opt/fix,position,name,chemical_composition'. Continue without modification {0} ".format(
+                            "'{1}' is not a Unimod modification please change it to a valid PSI-MS Unimod Name or Unimod Accession # or add the chemical composition as hill notation to the mod_dict, e.g: 'composition': 'H-1N1O2'. Continue without modification {0} ".format(
                                 mod, unimod_name
                             )
                         )
