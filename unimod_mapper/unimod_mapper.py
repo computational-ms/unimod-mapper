@@ -774,7 +774,6 @@ class UnimodMapper(object):
             # Check if any key from the mod dict is not valid!
             allowed_keys = ["aa", "type", "position", "name", "id", "composition",
                             "max_num_per_peptide", "intern_dist", "required", "neutral_loss"]
-            wrong_keys = []
             for key in mod.keys():
                 if key not in allowed_keys:
                     logger.warning(f"One or more used keys are not supported. Please "
@@ -864,11 +863,9 @@ class UnimodMapper(object):
             })
 
             neutral_loss = []
-            # neutral_loss = [mod["neutral_loss"]]
             if mod.get("neutral_loss", None) is not None:
                 if mod["neutral_loss"] == "unimod":
-                    # nl = self.name2nl_list(unimod_name)
-                    for nl_list in self.name2nl_list(unimod_name):
+                    for nl_list in self.name2neutral_loss_list(unimod_name):
                         for nl_item in nl_list:
                             if nl_item[0] == mod_dict["aa"]:
                                 neutral_loss.append(nl_item[1])
