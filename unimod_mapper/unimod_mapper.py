@@ -740,11 +740,10 @@ class UnimodMapper(object):
 
     def map_mods(self, mod_list):
         """
-        Maps modifications defined in params["modification"] using unimod. Using the
+        Maps modifications defined in params["modification"] using unimods or user-defined modifications. Using the
         dict format for the mods, the dict can be adjusted depending on the purpose of
-        the mapping. Moreover, it can only have the minimal amound of items, or e.g.
-        engine-specific ones. At the end the mapped vallues will be updated to the
-        original dict.
+        the mapping. Moreover, it can have the minimal amount of items (i.e.: engine-specific ones).
+        At the end the mapped values will be updated to the original dict.
 
         Args:
             mod_list (list): list of mod_dicts containing all relevant info about a
