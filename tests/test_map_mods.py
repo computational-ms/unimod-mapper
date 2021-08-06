@@ -129,7 +129,6 @@ unimod_dict = {
             "name": "Carbamidomethyl",
             "_id": 1,
             "mass": 57.021464,
-            "pos": "any",
             "composition": {"H": 3, "C": 2, "N": 1, "O": 1},
             "org": {
                 "aa": "C",
@@ -139,6 +138,7 @@ unimod_dict = {
             },
             "id": "4",
             "unimod": True,
+            "neutral_loss": None
         }
     ],
     "opt": [
@@ -148,11 +148,11 @@ unimod_dict = {
             "name": "Oxidation",
             "_id": 0,
             "mass": 15.994915,
-            "pos": "any",
             "composition": {"O": 1},
             "org": {"aa": "M", "type": "opt", "position": "any", "name": "Oxidation"},
             "id": "35",
             "unimod": True,
+            "neutral_loss": None
         },
         {
             "aa": "*",
@@ -160,7 +160,6 @@ unimod_dict = {
             "name": "Acetyl",
             "_id": 2,
             "mass": 42.010565,
-            "pos": "Prot-N-term",
             "composition": {"H": 2, "C": 2, "O": 1},
             "org": {
                 "aa": "*",
@@ -170,6 +169,7 @@ unimod_dict = {
             },
             "id": "1",
             "unimod": True,
+            "neutral_loss": None
         },
     ],
 }
@@ -183,7 +183,6 @@ unimod_dict_id = {
             "id": 4,
             "_id": 1,
             "mass": 57.021464,
-            "pos": "any",
             "name": "Carbamidomethyl",
             "composition": {"H": 3, "C": 2, "N": 1, "O": 1},
             "org": {"aa": "C", "type": "fix", "position": "any", "id": 4},
