@@ -919,23 +919,23 @@ class UnimodMapper(object):
             for key in mapped_dict.keys():
                 if mod_dict[key] is None:
                     mod_dict[key] = mapped_dict[key]
-                if mod_dict[key] is not None:
+                elif mod_dict[key] is not None:
                     if mod_dict[key] == mapped_dict[key]:
                         continue
-                    if mod_dict[key] != mapped_dict[key]:
+                    elif mod_dict[key] != mapped_dict[key]:
                         if key == "neutral_loss" and mod_dict[key] == "unimod":
-                            mod_dict["key"] = mapped_dict[key]
+                            mod_dict[key] = mapped_dict[key]
                         else:
                             logger.warning(f"The mapped key {mapped_dict[key]} does not match to the provided key {mod_dict[key]} value. "
                                            f"Please resolve the inconsistency! The {mod} will be skipped!")
 
-                # Finally add the last meta info to the mod_dict
-                mod_dict.pop("type")
-                mod_dict.update({
-                    "_id": index,
-                    "org": mod,
-                    "unimod": unimod,
-                })
+            # Finally add the last meta info to the mod_dict
+            mod_dict.pop("type")
+            mod_dict.update({
+                "_id": index,
+                "org": mod,
+                "unimod": unimod,
+            })
 
             rdict[type].append(mod_dict)
         return rdict
