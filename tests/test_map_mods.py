@@ -187,6 +187,7 @@ unimod_dict_id = {
             "composition": {"H": 3, "C": 2, "N": 1, "O": 1},
             "org": {"aa": "C", "type": "fix", "position": "any", "id": 4},
             "unimod": True,
+            "neutral_loss": None
         }
     ],
     "opt": [
@@ -196,11 +197,11 @@ unimod_dict_id = {
             "id": 35,
             "_id": 0,
             "mass": 15.994915,
-            "pos": "any",
             "name": "Oxidation",
             "composition": {"O": 1},
             "org": {"aa": "M", "type": "opt", "position": "any", "id": 35},
             "unimod": True,
+            "neutral_loss": None
         },
         {
             "aa": "*",
@@ -208,11 +209,11 @@ unimod_dict_id = {
             "id": 1,
             "_id": 2,
             "mass": 42.010565,
-            "pos": "Prot-N-term",
             "name": "Acetyl",
             "composition": {"H": 2, "C": 2, "O": 1},
             "org": {"aa": "*", "type": "opt", "position": "Prot-N-term", "id": 1},
             "unimod": True,
+            "neutral_loss": None
         },
     ],
 }
