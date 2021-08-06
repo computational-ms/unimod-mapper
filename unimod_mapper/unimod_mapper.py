@@ -826,6 +826,14 @@ class UnimodMapper(object):
                     #     neutral_loss = self.name2neutral_loss_list(unimod_name)
                     # else:
                     #     neutral_loss = mod_dict["neutral_loss"]
+                    if unimod_id == []:
+                        logger.warning(
+                            "'{1}' is not a Unimod modification please change it to a valid PSI-MS Unimod Name or Unimod Accession # or add the chemical composition as hill notation to the mod_dict, e.g: 'composition': 'H-1N1O2'. Continue without modification {0} ".format(
+                                mod, unimod_name
+                            )
+                        )
+                        continue
+                    unimod = True
                 elif mod_dict["id"] is not None:
                     unimod_id = int(mod["id"])
                     unimod_name = self.id2name_list(unimod_id)
@@ -922,14 +930,15 @@ class UnimodMapper(object):
                                            f"Please resolve the inconsistency! The {mod} will be skipped!")
 
                 # Finally add the last meta info to the mod_dict
+                mod_dict.pop("type")
                 mod_dict.update({
                     "_id": index,
                     "org": mod,
                     "unimod": unimod,
                 })
 
-                rdict[type].append(mod_dict)
-            return rdict
+            rdict[type].append(mod_dict)
+        return rdict
 
 
 
