@@ -422,58 +422,47 @@ unimod_dict_name_wrong_id = {
 }
 
 
-def test_unode_map_mods():
-    # unode = ursgal.unodes["all"]["test_node_v1"]
-    # _output = unode.map_mods(mod_list=mod_dict["parameters"]["modifications"])
+def test_map_mods_by_name():
     _output = UnimodMapper().map_mods(mod_list=mod_dict["parameters"]["modifications"])
     assert _output == unimod_dict
 
 
-def test_unode_map_mods_mod_not_in_unimod():
-    # unode = ursgal.unodes["all"]["test_node_v1"]
+def test_map_mods_by_name_mod_not_in_unimod():
     _output = UnimodMapper().map_mods(
         mod_list=mod_dict_not_in_unimod["parameters"]["modifications"]
     )
     assert _output == {"fix": [], "opt": []}
 
 
-def test_unode_map_mods_by_id():
-    # unode = ursgal.unodes["all"]["test_node_v1"]
+def test_map_mods_by_id():
     _output = UnimodMapper().map_mods(
         mod_list=mod_dict_id["parameters"]["modifications"]
     )
     assert _output == unimod_dict_id
 
 
-def test_unode_map_mods_mod_not_in_unimod_by_id():
-    # unode = ursgal.unodes["all"]["test_node_v1"]
+def test_map_mods_mod_not_in_unimod_by_id():
     _output = UnimodMapper().map_mods(
         mod_list=mod_dict_id_not_in_unimod["parameters"]["modifications"]
     )
     assert _output == {"fix": [], "opt": []}
 
 
-def test_unode_map_mods_nl():
-    # unode = ursgal.unodes["all"]["test_node_v1"]
-    # _output = unode.map_mods(mod_list=mod_dict["parameters"]["modifications"])
+def test_map_mods_neutral_loss():
     _output = UnimodMapper().map_mods(
         mod_list=mod_dict_nl["parameters"]["modifications"]
     )
     assert _output == unimod_dict_with_nl
 
 
-def test_unode_map_mods_name_id():
-    # unode = ursgal.unodes["all"]["test_node_v1"]
-    # _output = unode.map_mods(mod_list=mod_dict["parameters"]["modifications"])
+def test_map_mods_name_and_id():
     _output = UnimodMapper().map_mods(
         mod_list=mod_dict_name_id["parameters"]["modifications"]
     )
     assert _output == unimod_dict_name_id
 
 
-def test_unode_map_mods_name_wrong_id():
-    # unode = ursgal.unodes["all"]["test_node_v1"]
-    # _output = unode.map_mods(mod_list=mod_dict["parameters"]["modifications"])
+def test_map_mods_name_and_wrong_id():
     _output = UnimodMapper().map_mods(
         mod_list=mod_dict_name_wrong_id["parameters"]["modifications"]
     )
