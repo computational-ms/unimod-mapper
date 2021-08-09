@@ -430,7 +430,7 @@ class UnimodMapper(object):
         index = min(self.mapper.get(unimod_id, None))
         return self._data_list_2_value(index, "unimodname")
 
-    def id2neutral_loss_list(self, unimod_name):
+    def id2neutral_loss_list(self, unimod_id):
         """
         Converts unimod name to neutral_loss
 
@@ -786,6 +786,12 @@ class UnimodMapper(object):
 
             mod_dict.update(mod)
 
+            # user input could be int or string, but has to be converted to string
+            # internally as map_mods output returns a string unimod_id! Thus, the user
+            # is more flexible, but the check will still work
+            if isinstance(mod_dict["id"], int):
+                mod_dict["id"] = str(mod_dict["id"])
+
             # # Check if any key from the mod dict is not valid!
             # allowed_keys = ["aa", "type", "position", "name", "id", "composition",
             #                 "max_num_per_peptide", "intern_dist", "required", "neutral_loss"]
@@ -835,7 +841,7 @@ class UnimodMapper(object):
                         continue
                     unimod = True
                 elif mod_dict["id"] is not None:
-                    unimod_id = int(mod["id"])
+                    unimod_id = mod_dict["id"]
                     unimod_name = self.id2name_list(unimod_id)
                     mass = self.id2mass_list(unimod_id)
                     composition = self.id2composition_list(unimod_id)
@@ -846,7 +852,7 @@ class UnimodMapper(object):
                     if unimod_name == []:
                         logger.warning(
                             "'{1}' is not a Unimod modification please change it to a valid Unimod Accession # or PSI-MS Unimod Name or add the chemical composition as hill notation to the mod_dict, e.g: 'composition': 'H-1N1O2'. Continue without modification {0} ".format(
-                                mod, unimod_id
+                                mod_dict, unimod_id
                             )
                         )
                         continue
@@ -915,7 +921,7 @@ class UnimodMapper(object):
                             f"first element: {mapped_dict[key]}."
                         )
 
-
+            wrong_mapping = False
             for key in mapped_dict.keys():
                 if mod_dict[key] is None:
                     mod_dict[key] = mapped_dict[key]
@@ -928,6 +934,7 @@ class UnimodMapper(object):
                         else:
                             logger.warning(f"The mapped key {mapped_dict[key]} does not match to the provided key {mod_dict[key]} value. "
                                            f"Please resolve the inconsistency! The {mod} will be skipped!")
+                            wrong_mapping = True
 
             # Finally add the last meta info to the mod_dict
             mod_dict.pop("type")
@@ -936,8 +943,8 @@ class UnimodMapper(object):
                 "org": mod,
                 "unimod": unimod,
             })
-
-            rdict[type].append(mod_dict)
+            if wrong_mapping is False:
+                rdict[type].append(mod_dict)
         return rdict
 
 
