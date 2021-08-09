@@ -784,6 +784,13 @@ class UnimodMapper(object):
                 "neutral_loss": None,
             }
 
+            # - User input could be int or string, but has to be converted to string
+            #   internally as map_mods output returns a string unimod_id!
+            # - Has to happen here as mod will be written into mod_dict["org"]
+            # - Thus, the user is more flexible, but the check will still work.
+            if isinstance(mod.get("id", None), int):
+                mod["id"] = str(mod["id"])
+
             mod_dict.update(mod)
 
             # user input could be int or string, but has to be converted to string

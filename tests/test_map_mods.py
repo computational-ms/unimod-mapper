@@ -54,13 +54,13 @@ mod_dict_id = {
                 "aa": "M",
                 "type": "opt",
                 "position": "any",
-                "id": "35",
+                "id": 35,
             },
             {
                 "aa": "C",
                 "type": "fix",
                 "position": "any",
-                "id": "4",
+                "id": 4,
             },
             {
                 "aa": "*",
