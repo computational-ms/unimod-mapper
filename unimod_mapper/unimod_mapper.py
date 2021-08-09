@@ -793,22 +793,6 @@ class UnimodMapper(object):
 
             mod_dict.update(mod)
 
-            # user input could be int or string, but has to be converted to string
-            # internally as map_mods output returns a string unimod_id! Thus, the user
-            # is more flexible, but the check will still work
-            if isinstance(mod_dict["id"], int):
-                mod_dict["id"] = str(mod_dict["id"])
-
-            # # Check if any key from the mod dict is not valid!
-            # allowed_keys = ["aa", "type", "position", "name", "id", "composition",
-            #                 "max_num_per_peptide", "intern_dist", "required", "neutral_loss"]
-            # for key in mod_dict.keys():
-            #     if key not in allowed_keys:
-            #         logger.warning(f"{key} is not a supported mod_dict key. Please "
-            #                      f"confirm that you are using keys from {allowed_keys} "
-            #                      f"within your mod_dict. Continue without {mod_dict}!")
-            #         break
-
             unimod = False
             unimod_id = None
             type = mod_dict["type"]
@@ -835,10 +819,6 @@ class UnimodMapper(object):
                     unimod_id = self.name2id_list(unimod_name)
                     mass = self.name2mass_list(unimod_name)
                     composition = self.name2composition_list(unimod_name)
-                    # if mod_dict["neutral_class"] == "unimod":
-                    #     neutral_loss = self.name2neutral_loss_list(unimod_name)
-                    # else:
-                    #     neutral_loss = mod_dict["neutral_loss"]
                     if unimod_id == []:
                         logger.warning(
                             "'{1}' is not a Unimod modification please change it to a valid PSI-MS Unimod Name or Unimod Accession # or add the chemical composition as hill notation to the mod_dict, e.g: 'composition': 'H-1N1O2'. Continue without modification {0} ".format(
@@ -852,10 +832,6 @@ class UnimodMapper(object):
                     unimod_name = self.id2name_list(unimod_id)
                     mass = self.id2mass_list(unimod_id)
                     composition = self.id2composition_list(unimod_id)
-                    # if mod_dict["neutral_class"] == "unimod":
-                    #     neutral_loss = self.id2neutral_loss_list(unimod_name)
-                    # else:
-                    #     neutral_loss = mod_dict["neutral_loss"]
                     if unimod_name == []:
                         logger.warning(
                             "'{1}' is not a Unimod modification please change it to a valid Unimod Accession # or PSI-MS Unimod Name or add the chemical composition as hill notation to the mod_dict, e.g: 'composition': 'H-1N1O2'. Continue without modification {0} ".format(
@@ -899,7 +875,6 @@ class UnimodMapper(object):
                     mass = chemical_composition.mass()
 
             neutral_loss = []
-            # if mod_dict["neutral_loss"] is not None:
             if mod_dict["neutral_loss"] == "unimod":
                 for nl_item in self.name2neutral_loss_list(unimod_name)[0]:
                     if nl_item[0] == mod_dict["aa"]:
@@ -953,190 +928,6 @@ class UnimodMapper(object):
             if wrong_mapping is False:
                 rdict[type].append(mod_dict)
         return rdict
-
-
-
-
-
-
-
-
-
-
-
-
-#
-#
-# # old version from here on
-#
-#             if mod_dict["name"] is not None:
-#
-#                 unimod_name = mod_dict["name"]
-#                 unimod_id = self.name2id_list(unimod_name)
-#                 # unimod_name = mod["name"]
-#                 # unimod_id = self.name2id_list(unimod_name)
-#                 mass = self.name2mass_list(unimod_name)
-#                 composition = self.name2composition_list(unimod_name)
-#
-#
-#             elif mod_dict["id"] is not None:
-#                 unimod_id = int(mod["id"])
-#                 unimod_name = self.id2name_list(unimod_id)
-#                 mass = self.id2mass_list(unimod_id)
-#                 composition = self.id2composition_list(unimod_id)
-#
-#             elif mod_dict["composition"] is not None:
-#                 unimod_name = mod["name"]
-#                 chemical_formula = mod["composition"]
-#                 chemical_composition = ChemicalComposition()
-#                 chemical_composition.add_chemical_formula(chemical_formula)
-#                 composition = chemical_composition
-#                 composition_unimod_style = chemical_composition.hill_notation_unimod()
-#                 unimod_name_list = self.composition2name_list(composition_unimod_style)
-#                 unimod_id_list = self.composition2id_list(composition_unimod_style)
-#                 mass = self.composition2mass(composition_unimod_style)
-#                 for i, name in enumerate(unimod_name_list):
-#                     if name == unimod_name:
-#                         unimod_id = unimod_id_list[i]
-#                         unimod = True
-#                         break
-#                 if unimod is False and unimod_name_list != []:
-#                     logger.warning(
-#                         "'{0}' is not a Unimod modification but the chemical composition you specified is included in Unimod. Please use one of the Unimod names: {1} Continue without modification {2} ".format(
-#                             unimod_name, unimod_name_list, mod
-#                         )
-#                     )
-#                     continue
-#                 if unimod is False and unimod_name_list == []:
-#                     logger.warning(
-#                         "'{0}' is not a Unimod modification trying to continue with the chemical composition you specified. This is not working with OMSSA so far".format(
-#                             mod,
-#                         )
-#                     )
-#                     mass = chemical_composition.mass()
-#
-#                 if unimod_id == []:
-#                     logger.warning(
-#                         "'{1}' is not a Unimod modification please change it to a valid PSI-MS Unimod Name or Unimod Accession # or add the chemical composition as hill notation to the mod_dict, e.g: 'composition': 'H-1N1O2'. Continue without modification {0} ".format(
-#                             mod, unimod_name
-#                         )
-#                     )
-#                     continue
-#                 unimod = True
-#
-#
-# # till here
-#
-#
-# # super old version
-#
-#             if mod.get("composition", None) is None:
-#                 try:
-#                     unimod_id = int(mod["id"])
-#                     unimod_name = self.id2name_list(unimod_id)
-#                     mass = self.id2mass_list(unimod_id)
-#                     composition = self.id2composition_list(unimod_id)
-#                     if unimod_name == []:
-#                         logger.warning(
-#                             "'{1}' is not a Unimod modification please change it to a valid Unimod Accession # or PSI-MS Unimod Name or add the chemical composition as hill notation to the mod_dict, e.g: 'composition': 'H-1N1O2'. Continue without modification {0} ".format(
-#                                 mod, unimod_id
-#                             )
-#                         )
-#                         continue
-#                     unimod = True
-#                 except KeyError:
-#                     unimod_name = mod["name"]
-#                     unimod_id = self.name2id_list(unimod_name)
-#                     mass = self.name2mass_list(unimod_name)
-#                     composition = self.name2composition_list(unimod_name)
-#                     if unimod_id == []:
-#                         logger.warning(
-#                             "'{1}' is not a Unimod modification please change it to a valid PSI-MS Unimod Name or Unimod Accession # or add the chemical composition as hill notation to the mod_dict, e.g: 'composition': 'H-1N1O2'. Continue without modification {0} ".format(
-#                                 mod, unimod_name
-#                             )
-#                         )
-#                         continue
-#                     unimod = True
-#             else:
-#                 unimod_name = mod["name"]
-#                 chemical_formula = mod["composition"]
-#                 chemical_composition = ChemicalComposition()
-#                 chemical_composition.add_chemical_formula(chemical_formula)
-#                 composition = chemical_composition
-#                 composition_unimod_style = chemical_composition.hill_notation_unimod()
-#                 unimod_name_list = self.composition2name_list(composition_unimod_style)
-#                 unimod_id_list = self.composition2id_list(composition_unimod_style)
-#                 mass = self.composition2mass(composition_unimod_style)
-#                 for i, name in enumerate(unimod_name_list):
-#                     if name == unimod_name:
-#                         unimod_id = unimod_id_list[i]
-#                         unimod = True
-#                         break
-#                 if unimod is False and unimod_name_list != []:
-#                     logger.warning(
-#                         "'{0}' is not a Unimod modification but the chemical composition you specified is included in Unimod. Please use one of the Unimod names: {1} Continue without modification {2} ".format(
-#                             unimod_name, unimod_name_list, mod
-#                         )
-#                     )
-#                     continue
-#                 if unimod is False and unimod_name_list == []:
-#                     logger.warning(
-#                         "'{0}' is not a Unimod modification trying to continue with the chemical composition you specified. This is not working with OMSSA so far".format(
-#                             mod,
-#                         )
-#                     )
-#                     mass = chemical_composition.mass()
-#                     # write new userdefined modifications Xml in unimod style
-#
-# # until here
-#
-#             mod_dict = copy.deepcopy(mod)
-#             mod_dict.pop("type")
-#             mod_dict.update({
-#                 "_id": index,
-#                 "aa": mod["aa"],
-#                 "mass": mass,
-#                 "pos": mod["position"],
-#                 "name": unimod_name,
-#                 "composition": composition,
-#                 "org": mod,
-#                 "id": unimod_id,
-#                 "unimod": unimod,
-#                 # "neutral_loss": neutral_loss
-#             })
-#
-#             neutral_loss = []
-#             if mod.get("neutral_loss", None) is not None:
-#                 if mod["neutral_loss"] == "unimod":
-#                     for nl_list in self.name2neutral_loss_list(unimod_name):
-#                         for nl_item in nl_list:
-#                             if nl_item[0] == mod_dict["aa"]:
-#                                 neutral_loss.append(nl_item[1])
-#                 else:
-#                     neutral_loss.append(mod_dict["neutral_loss"])
-#
-#                 mod_dict.update({"neutral_loss": neutral_loss})
-#
-#
-#             # refactor the dict such as the first element of the list will be taken.
-#             # Raise a warning if list has more than 1 entry!
-#             # The double check allows to only modify those lists that were generated
-#             # by the x2x_list functions, but accept lists in other mod_params
-#             for obj in ["mass", "composition", "name", "id", "neutral_loss"]:
-#                 if obj in list(mod_dict.keys()):
-#                     if isinstance(mod_dict[obj], list):
-#                         if len(mod_dict[obj]) == 1:
-#                             mod_dict[obj] = mod_dict[obj][0]
-#                         elif len(mod_dict[obj]) > 1:
-#                             mod_dict[obj] = mod_dict[obj][0]
-#                             logger.warning(
-#                                 f"More than 1 {obj} was mapped, due to multiple entries for "
-#                                 f"{mod_dict['org']}. The {obj} was assigned to "
-#                                 f"{mod_dict[obj]}."
-#                             )
-#             rdict[type].append(mod_dict)
-#         return rdict
-
 
 if __name__ == "__main__":
     print(__doc__)
