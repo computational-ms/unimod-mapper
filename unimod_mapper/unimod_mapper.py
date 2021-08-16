@@ -130,7 +130,8 @@ class UnimodMapper(object):
                             if classification != "Artefact":
                                 tmp["specificity"].append((amino_acid, classification))
                         elif element.tag.endswith("}NeutralLoss"):
-                            if element.attrib["composition"] != "0":
+                            if element.attrib["composition"] != "0" and tmp[
+                                "specificity"] != []:
                                 amino_acid = tmp["specificity"][-1][0]
                                 neutral_loss = element.attrib["mono_mass"]
                                 tmp["neutral_loss"].append((amino_acid, neutral_loss))
