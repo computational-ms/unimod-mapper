@@ -4,14 +4,17 @@ on:
       - v*
 jobs:
   test_pypi:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
       - uses: casperdcl/deploy-pypi@v2
         with:
+          user: __token__
           password: ${{ secrets.TEST_PYPI_PASSWORD }}
-          # pip: wheel -w dist/ --no-deps .
+          requirements: twine wheel
+          pip: wheel -w dist/ --no-deps .
           # only upload if a tag is pushed (otherwise just build & check)
           # upload: ${{ github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags') }}
-          upload: false
-          url: https://test.pypi.org
+          upload: true
+          url: https://test.pypi.org/legacy/
