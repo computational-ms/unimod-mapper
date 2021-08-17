@@ -1,0 +1,17 @@
+on:
+  create:
+    tags:
+      - v*
+jobs:
+  test_pypi:
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - uses: casperdcl/deploy-pypi@v2
+        with:
+          password: ${{ secrets.TEST_PYPI_PASSWORD }}
+          # pip: wheel -w dist/ --no-deps .
+          # only upload if a tag is pushed (otherwise just build & check)
+          # upload: ${{ github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags') }}
+          upload: false
+          url: https://test.pypi.org
