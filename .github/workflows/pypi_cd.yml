@@ -10,8 +10,8 @@ jobs:
       - uses: actions/setup-python@v2
       - run: |
         echo ${{ github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags') }}
-        echo "Event name ${{ github.even_name == 'push' }}"
-        echo "Is tag ${{ startsWith(github.even.ref, 'refs.tags')"
+        echo 'Event name ${{ github.even_name == 'push' }}'
+        echo 'Is tag ${{ startsWith(github.even.ref, "refs.tags")'
       - uses: casperdcl/deploy-pypi@v2
         with:
           user: __token__
