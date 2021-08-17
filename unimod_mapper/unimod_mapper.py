@@ -114,7 +114,7 @@ class UnimodMapper(object):
                                 "unimodname": element.attrib["title"],
                                 "element": {},
                                 "specificity": [],
-                                "neutral_loss": []
+                                "neutral_loss": [],
                             }
                         elif element.tag.endswith("}delta"):
                             collect_element = True
@@ -235,7 +235,6 @@ class UnimodMapper(object):
             rval = None
         return rval
 
-
     def name2composition_list(self, unimod_name):
         """
         Converts unimod name to all matching unimod compositions
@@ -306,7 +305,6 @@ class UnimodMapper(object):
             rval = None
         return rval
 
-
     def name2neutral_loss_list(self, unimod_name):
         """
         Converts unimod name to neutral_loss
@@ -323,7 +321,6 @@ class UnimodMapper(object):
             for index in index_list:
                 list_2_return.append(self._data_list_2_value(index, "neutral_loss"))
         return list_2_return
-
 
     def name2specificity_list(self, unimod_name):
         """
@@ -383,8 +380,6 @@ class UnimodMapper(object):
         else:
             rval = None
         return rval
-
-
 
     def id2composition_list(self, unimod_id):
         """
@@ -831,20 +826,26 @@ class UnimodMapper(object):
             unimod_id = None
             type = mod_dict["type"]
             if type not in ["opt", "fix"]:
-                logger.warning("You selected a modification type, which is not supported. Only 'fix and 'opt' " \
-                            "modifications are accepted! Please contact the unimod-mapper dev team if you wish your"
-                             "modification type to be considered.")
+                logger.warning(
+                    "You selected a modification type, which is not supported. Only 'fix and 'opt' "
+                    "modifications are accepted! Please contact the unimod-mapper dev team if you wish your"
+                    "modification type to be considered."
+                )
                 # break
 
             if mod_dict["aa"] is None:
-                logger.warning("The unimod mapper requires the information about the modified amino acid. "
-                               "Please provide it in a single letter code, or '*' if the mod is not specific to a single"
-                               "amino acid.")
+                logger.warning(
+                    "The unimod mapper requires the information about the modified amino acid. "
+                    "Please provide it in a single letter code, or '*' if the mod is not specific to a single"
+                    "amino acid."
+                )
                 # break
 
             if mod_dict["position"] is None:
-                logger.warning("Positional argument was not specified, which might impact further processing of the "
-                               "modification.")
+                logger.warning(
+                    "Positional argument was not specified, which might impact further processing of the "
+                    "modification."
+                )
                 # break
 
             if mod_dict["composition"] is None:
@@ -875,8 +876,10 @@ class UnimodMapper(object):
                         continue
                     unimod = True
                 else:
-                    logger.warning("You have to provide either unimod_name, unimod_id or mod composition"
-                                   "to use the unimod mapping.")
+                    logger.warning(
+                        "You have to provide either unimod_name, unimod_id or mod composition"
+                        "to use the unimod mapping."
+                    )
                     break
             else:
                 unimod_name = mod_dict["name"]
@@ -916,11 +919,13 @@ class UnimodMapper(object):
             else:
                 neutral_loss.append(mod_dict["neutral_loss"])
 
-            mapped_dict = {"name": unimod_name,
-                           "id": unimod_id,
-                           "mass": mass,
-                           "composition": composition,
-                           "neutral_loss": neutral_loss}
+            mapped_dict = {
+                "name": unimod_name,
+                "id": unimod_id,
+                "mass": mass,
+                "composition": composition,
+                "neutral_loss": neutral_loss,
+            }
 
             # refactor the mapped_dict such as the first element of the list will be taken.
             # Raise a warning if list has more than 1 entry!
@@ -948,20 +953,25 @@ class UnimodMapper(object):
                         if key == "neutral_loss" and mod_dict[key] == "unimod":
                             mod_dict[key] = mapped_dict[key]
                         else:
-                            logger.warning(f"The mapped key {mapped_dict[key]} does not match to the provided key {mod_dict[key]} value. "
-                                           f"Please resolve the inconsistency! The {mod} will be skipped!")
+                            logger.warning(
+                                f"The mapped key {mapped_dict[key]} does not match to the provided key {mod_dict[key]} value. "
+                                f"Please resolve the inconsistency! The {mod} will be skipped!"
+                            )
                             wrong_mapping = True
 
             # Finally add the last meta info to the mod_dict
             mod_dict.pop("type")
-            mod_dict.update({
-                "_id": index,
-                "org": mod,
-                "unimod": unimod,
-            })
+            mod_dict.update(
+                {
+                    "_id": index,
+                    "org": mod,
+                    "unimod": unimod,
+                }
+            )
             if wrong_mapping is False:
                 rdict[type].append(mod_dict)
         return rdict
+
 
 if __name__ == "__main__":
     print(__doc__)
