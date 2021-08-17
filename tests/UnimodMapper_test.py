@@ -322,7 +322,9 @@ class TestXMLIntegrity:
     def test_read_usermod_file_exclude_defaults(self):
         # the order of the files shouldn't change the unimodIDs
         for data in MULTIFILE_TESTS:
-            um = unimod_mapper.UnimodMapper(xml_file_list=data["order"], add_default_files=False)
+            um = unimod_mapper.UnimodMapper(
+                xml_file_list=data["order"], add_default_files=False
+            )
             assert len(um.data_list) == data["entries"]
             for case in data["excluded"]:
                 assert case["out"] == um.name2id_list(case["in"])

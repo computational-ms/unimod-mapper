@@ -170,9 +170,7 @@ class UnimodMapper(object):
             if unimod_data_dict["unimodname"] in mapper.keys():
                 name = unimod_data_dict["unimodname"]
                 id = unimod_data_dict["unimodID"]
-                logger.warning(
-                    f"Warning: unimod {name} (ID {id}) is duplicated"
-                )
+                logger.warning(f"Warning: unimod {name} (ID {id}) is duplicated")
 
             for key, value in unimod_data_dict.items():
                 if key == "element":
