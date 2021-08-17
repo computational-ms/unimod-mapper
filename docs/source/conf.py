@@ -12,32 +12,31 @@
 #
 import os
 import sys
+
 # sys.path.insert(0, os.path.abspath('.'))
 
 
 # -- Project information -----------------------------------------------------
 
-project = 'unimod-mapper'
-copyright = '2019, fufezan-lab'
-author = 'fufezan-lab'
+project = "unimod-mapper"
+copyright = "2019, fufezan-lab"
+author = "fufezan-lab"
 
 # The full version, including alpha/beta/rc tags
-release = '0.4'
+release = "0.4"
 
 
 # -- General configuration ---------------------------------------------------
-sys.path.insert(0, os.path.abspath('../../tests/'))
-sys.path.insert(0, os.path.abspath('../../example_scripts/'))
-sys.path.insert(0, os.path.abspath('../../'))
+sys.path.insert(0, os.path.abspath("../../tests/"))
+sys.path.insert(0, os.path.abspath("../../example_scripts/"))
+sys.path.insert(0, os.path.abspath("../../"))
 
 # -- General configuration ------------------------------------------------
 
 version_path = os.path.join(
-    os.path.dirname(__file__),
-    os.pardir, os.pardir,
-    'unimod_mapper', 'version.txt'
+    os.path.dirname(__file__), os.pardir, os.pardir, "unimod_mapper", "version.txt"
 )
-with open(version_path, 'r') as version_file:
+with open(version_path, "r") as version_file:
     ursgal_version = version_file.read().strip()
 
 # The short X.Y version.
@@ -49,16 +48,16 @@ release = ursgal_version
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'sphinx.ext.autodoc',
-    'sphinx.ext.coverage',
-    'sphinx.ext.napoleon',
+    "sphinx.ext.autodoc",
+    "sphinx.ext.coverage",
+    "sphinx.ext.napoleon",
     # 'sphinxcontrib.exceltable',
     # 'sphinx.ext.viewcode'
 ]
 
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -71,14 +70,14 @@ exclude_patterns = []
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+on_rtd = os.environ.get("READTHEDOCS", None) == "True"
 if on_rtd:
-    html_theme = 'default'
+    html_theme = "default"
 else:
     # html_theme = 'default'
-    html_theme = 'sphinx_rtd_theme'
+    html_theme = "sphinx_rtd_theme"
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
-html_static_path = ['_static']
+html_static_path = ["_static"]
