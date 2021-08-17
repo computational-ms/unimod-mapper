@@ -22,6 +22,7 @@ import codecs
 import xml.etree.ElementTree as ET
 import xml.dom.minidom as xmldom
 import requests
+import copy
 
 from pathlib import Path
 from loguru import logger
@@ -114,6 +115,7 @@ class UnimodMapper(object):
                                 "unimodname": element.attrib["title"],
                                 "element": {},
                                 "specificity": [],
+                                "neutral_loss": [],
                             }
                         elif element.tag.endswith("}delta"):
                             collect_element = True
@@ -128,8 +130,17 @@ class UnimodMapper(object):
                             classification = element.attrib["classification"]
                             if classification != "Artefact":
                                 tmp["specificity"].append((amino_acid, classification))
-                        else:
-                            pass
+                        elif element.tag.endswith("}NeutralLoss"):
+                            if element.attrib["composition"] != "0":
+                                amino_acid = tmp["specificity"][-1][0]
+                                neutral_loss = element.attrib["mono_mass"]
+                                tmp["neutral_loss"].append((amino_acid, neutral_loss))
+                        # elif element.tag.endswith("}NeutralLoss"):
+                        #     if element.attrib["composition"] != "0":
+                        #         site = tmp["specificity"][-1][0]
+                        #         tmp["neutral_loss"][site] = element.attrib["mono_mass"]
+                        # # else:
+                        #     pass
                     else:
                         # end element
                         if element.tag.endswith("}delta"):
@@ -182,6 +193,8 @@ class UnimodMapper(object):
                     mapper[hill_notation].append(index)
                 elif key == "specificity":
                     pass
+                elif key == "neutral_loss":
+                    pass
                 else:
                     if value not in mapper.keys():
                         mapper[value] = []
@@ -223,7 +236,6 @@ class UnimodMapper(object):
         else:
             rval = None
         return rval
-
 
     def name2composition_list(self, unimod_name):
         """
@@ -295,6 +307,22 @@ class UnimodMapper(object):
             rval = None
         return rval
 
+    def name2neutral_loss_list(self, unimod_name):
+        """
+        Converts unimod name to neutral_loss
+
+        Args:
+            unimod_name (str): name of modification (as named in unimod)
+
+        Returns:
+            list: list of Unimod mono isotopic masses
+        """
+        list_2_return = []
+        index_list = self.mapper.get(unimod_name, None)
+        if index_list is not None:
+            for index in index_list:
+                list_2_return.append(self._data_list_2_value(index, "neutral_loss"))
+        return list_2_return
 
     def name2specificity_list(self, unimod_name):
         """
@@ -354,8 +382,6 @@ class UnimodMapper(object):
         else:
             rval = None
         return rval
-
-
 
     def id2composition_list(self, unimod_id):
         """
@@ -434,6 +460,25 @@ class UnimodMapper(object):
         else:
             rval = None
         return rval
+
+    def id2neutral_loss_list(self, unimod_id):
+        """
+        Converts unimod name to neutral_loss
+
+        Args:
+            unimod_name (str): name of modification (as named in unimod)
+
+        Returns:
+            list: list of Unimod mono isotopic masses
+        """
+        if isinstance(unimod_id, int) is True:
+            unimod_id = str(unimod_id)
+        list_2_return = []
+        index_list = self.mapper.get(unimod_id, None)
+        if index_list is not None:
+            for index in index_list:
+                list_2_return.append(self._data_list_2_value(index, "neutral_loss"))
+        return list_2_return
 
     # mass is ambigous therefore a list is returned
     def mass2name_list(self, mass):
@@ -723,6 +768,211 @@ class UnimodMapper(object):
     def _reparseXML(self, xml_file_list=[]):
         self._data_list = self._parseXML(xml_file_list=xml_file_list)
         self._mapper = self._initialize_mapper()
+
+    def map_mods(self, mod_list):
+        """
+        Maps modifications defined in params["modification"] using unimods or user-defined modifications. Using the
+        dict format for the mods, the dict can be adjusted depending on the purpose of
+        the mapping. Moreover, it can have the minimal amount of items (i.e.: engine-specific ones).
+        At the end the mapped values will be updated to the original dict.
+
+        Args:
+            mod_list (list): list of mod_dicts containing all relevant info about a
+                             given modification
+
+        Returns:
+            rdict (dict): dict with mod types as keys and corresponding lists of
+                             mod dicts mapped to unimod
+
+        Examples:
+
+            mod_list = [
+                {
+                    "aa": "M",              # specify the modified amino acid as a single letter, use '*' if the amino acid is variable
+                    "type": "opt",          # specify if it is a fixed (fix) or potential (opt) modification
+                    "position": "any",      # specify the position within the protein/peptide (Prot-N-term, Prot-C-term), use 'any' if the positon is variable
+                    "name": "Oxidation",    # specify the unimod PSI-MS Name (alternative to id)
+                    "id": None,             # specify the unimod Accession (alternative to name)
+                    "composition": None,    # For user-defined mods composition needs to be given as a Hill notation
+                }
+            ]
+
+        """
+
+        rdict = {"fix": [], "opt": []}
+        for index, mod in enumerate(mod_list):
+
+            # Generate a default mod_dict with minimal required keys
+
+            mod_dict = {
+                "aa": None,
+                "type": None,
+                "position": None,
+                "name": None,
+                "mass": None,
+                "composition": None,
+                "id": None,
+                "neutral_loss": None,
+            }
+
+            # - User input could be int or string, but has to be converted to string
+            #   internally as map_mods output returns a string unimod_id!
+            # - Has to happen here as mod will be written into mod_dict["org"]
+            # - Thus, the user is more flexible, but the check will still work.
+            if isinstance(mod.get("id", None), int):
+                mod["id"] = str(mod["id"])
+
+            mod_dict.update(mod)
+
+            unimod = False
+            unimod_id = None
+            type = mod_dict["type"]
+            if type not in ["opt", "fix"]:
+                logger.warning(
+                    "You selected a modification type, which is not supported. Only 'fix and 'opt' "
+                    "modifications are accepted! Please contact the unimod-mapper dev team if you wish your"
+                    "modification type to be considered."
+                )
+                # break
+
+            if mod_dict["aa"] is None:
+                logger.warning(
+                    "The unimod mapper requires the information about the modified amino acid. "
+                    "Please provide it in a single letter code, or '*' if the mod is not specific to a single"
+                    "amino acid."
+                )
+                # break
+
+            if mod_dict["position"] is None:
+                logger.warning(
+                    "Positional argument was not specified, which might impact further processing of the "
+                    "modification."
+                )
+                # break
+
+            if mod_dict["composition"] is None:
+                if mod_dict["name"] is not None:
+                    unimod_name = mod_dict["name"]
+                    unimod_id = self.name2id_list(unimod_name)
+                    mass = self.name2mass_list(unimod_name)
+                    composition = self.name2composition_list(unimod_name)
+                    if unimod_id == []:
+                        logger.warning(
+                            "'{1}' is not a Unimod modification please change it to a valid PSI-MS Unimod Name or Unimod Accession # or add the chemical composition as hill notation to the mod_dict, e.g: 'composition': 'H-1N1O2'. Continue without modification {0} ".format(
+                                mod, unimod_name
+                            )
+                        )
+                        continue
+                    unimod = True
+                elif mod_dict["id"] is not None:
+                    unimod_id = mod_dict["id"]
+                    unimod_name = self.id2name_list(unimod_id)
+                    mass = self.id2mass_list(unimod_id)
+                    composition = self.id2composition_list(unimod_id)
+                    if unimod_name == []:
+                        logger.warning(
+                            "'{1}' is not a Unimod modification please change it to a valid Unimod Accession # or PSI-MS Unimod Name or add the chemical composition as hill notation to the mod_dict, e.g: 'composition': 'H-1N1O2'. Continue without modification {0} ".format(
+                                mod_dict, unimod_id
+                            )
+                        )
+                        continue
+                    unimod = True
+                else:
+                    logger.warning(
+                        "You have to provide either unimod_name, unimod_id or mod composition"
+                        "to use the unimod mapping."
+                    )
+                    break
+            else:
+                unimod_name = mod_dict["name"]
+                chemical_formula = mod_dict["composition"]
+                chemical_composition = ChemicalComposition()
+                chemical_composition.add_chemical_formula(chemical_formula)
+                composition = chemical_composition
+                composition_unimod_style = chemical_composition.hill_notation_unimod()
+                unimod_name_list = self.composition2name_list(composition_unimod_style)
+                unimod_id_list = self.composition2id_list(composition_unimod_style)
+                mass = self.composition2mass(composition_unimod_style)
+                for i, name in enumerate(unimod_name_list):
+                    if name == unimod_name:
+                        unimod_id = unimod_id_list[i]
+                        unimod = True
+                        break
+                if unimod is False and unimod_name_list != []:
+                    logger.warning(
+                        "'{0}' is not a Unimod modification but the chemical composition you specified is included in Unimod. Please use one of the Unimod names: {1} Continue without modification {2} ".format(
+                            unimod_name, unimod_name_list, mod_dict
+                        )
+                    )
+                    continue
+                if unimod is False and unimod_name_list == []:
+                    logger.warning(
+                        "'{0}' is not a Unimod modification trying to continue with the chemical composition you specified. This is not working with OMSSA so far".format(
+                            mod,
+                        )
+                    )
+                    mass = chemical_composition.mass()
+
+            neutral_loss = []
+            if mod_dict["neutral_loss"] == "unimod":
+                for nl_item in self.name2neutral_loss_list(unimod_name)[0]:
+                    if nl_item[0] == mod_dict["aa"]:
+                        neutral_loss.append(nl_item[1])
+            else:
+                neutral_loss.append(mod_dict["neutral_loss"])
+
+            mapped_dict = {
+                "name": unimod_name,
+                "id": unimod_id,
+                "mass": mass,
+                "composition": composition,
+                "neutral_loss": neutral_loss,
+            }
+
+            # refactor the mapped_dict such as the first element of the list will be taken.
+            # Raise a warning if list has more than 1 entry!
+            # The double check allows to only modify those lists that were generated
+            # by the x2x_list functions, but accept lists in other mod_params
+            for key in mapped_dict.keys():
+                if isinstance(mapped_dict[key], list):
+                    if len(mapped_dict[key]) == 1:
+                        mapped_dict[key] = mapped_dict[key][0]
+                    elif len(mapped_dict[key]) > 1:
+                        mapped_dict[key] = mapped_dict[key][0]
+                        logger.warning(
+                            f"More than 1 {key} was mapped. The {key} was assigned to the "
+                            f"first element: {mapped_dict[key]}."
+                        )
+
+            wrong_mapping = False
+            for key in mapped_dict.keys():
+                if mod_dict[key] is None:
+                    mod_dict[key] = mapped_dict[key]
+                elif mod_dict[key] is not None:
+                    if mod_dict[key] == mapped_dict[key]:
+                        continue
+                    elif mod_dict[key] != mapped_dict[key]:
+                        if key == "neutral_loss" and mod_dict[key] == "unimod":
+                            mod_dict[key] = mapped_dict[key]
+                        else:
+                            logger.warning(
+                                f"The mapped key {mapped_dict[key]} does not match to the provided key {mod_dict[key]} value. "
+                                f"Please resolve the inconsistency! The {mod} will be skipped!"
+                            )
+                            wrong_mapping = True
+
+            # Finally add the last meta info to the mod_dict
+            mod_dict.pop("type")
+            mod_dict.update(
+                {
+                    "_id": index,
+                    "org": mod,
+                    "unimod": unimod,
+                }
+            )
+            if wrong_mapping is False:
+                rdict[type].append(mod_dict)
+        return rdict
 
 
 if __name__ == "__main__":
