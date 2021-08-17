@@ -3,14 +3,11 @@ on:
     tags:
       - v*
 jobs:
-  test_pypi:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
-      - run: echo ${{ github.event_name == 'create' && startsWith(github.event.ref, 'v') }}
-      - run: echo ${{ github.event_name }}
-      - run: echo ${{ github.event.ref }}
       - uses: casperdcl/deploy-pypi@v2
         with:
           password: ${{ secrets.TEST_PYPI }}
@@ -18,4 +15,3 @@ jobs:
           pip: wheel -w dist/ --no-deps .
           # only upload if a tag is pushed (otherwise just build & check)
           upload: ${{ github.event_name == 'create' && startsWith(github.event.ref, 'v') }}
-          url: https://test.pypi.org/legacy/
