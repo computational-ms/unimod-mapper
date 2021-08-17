@@ -209,10 +209,12 @@ CONVERSIONS = [
                 "in": {"args": ["C(2)H(3)N(1)O(1)"]},
                 "out": [
                     "Carbamidomethyl",
+                    "Carbofuran",
                     "Ala->Gln",
                     "Gly->Asn",
                     "Gly",
                     "Carbamidomethyl",
+                    "Carbofuran",
                     "Ala->Gln",
                     "Gly->Asn",
                     "Gly",
