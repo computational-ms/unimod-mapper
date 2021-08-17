@@ -8,6 +8,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-python@v2
+      - run: echo ${{ github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags') }}
       - uses: casperdcl/deploy-pypi@v2
         with:
           user: __token__
