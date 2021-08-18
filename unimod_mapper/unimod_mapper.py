@@ -131,7 +131,11 @@ class UnimodMapper(object):
                             if classification != "Artefact":
                                 tmp["specificity"].append((amino_acid, classification))
                         elif element.tag.endswith("}NeutralLoss"):
-                            if element.attrib["composition"] != "0":
+                            if (
+                                element.attrib["composition"]
+                                and element.attrib["composition"] != "0"
+                                and tmp["specificity"]
+                            ):
                                 amino_acid = tmp["specificity"][-1][0]
                                 neutral_loss = element.attrib["mono_mass"]
                                 tmp["neutral_loss"].append((amino_acid, neutral_loss))
@@ -906,7 +910,7 @@ class UnimodMapper(object):
                 if unimod is False and unimod_name_list == []:
                     logger.warning(
                         "'{0}' is not a Unimod modification trying to continue with the chemical composition you specified. This is not working with OMSSA so far".format(
-                            mod,
+                            mod
                         )
                     )
                     mass = chemical_composition.mass()
@@ -961,13 +965,7 @@ class UnimodMapper(object):
 
             # Finally add the last meta info to the mod_dict
             mod_dict.pop("type")
-            mod_dict.update(
-                {
-                    "_id": index,
-                    "org": mod,
-                    "unimod": unimod,
-                }
-            )
+            mod_dict.update({"_id": index, "org": mod, "unimod": unimod})
             if wrong_mapping is False:
                 rdict[type].append(mod_dict)
         return rdict
