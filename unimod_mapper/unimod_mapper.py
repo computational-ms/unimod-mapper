@@ -45,7 +45,7 @@ class UnimodMapper(object):
 
     """
 
-    def __init__(self, refresh_xml=False, xml_file_list=None):
+    def __init__(self, refresh_xml=False, xml_file_list=None, add_default_files=True):
         if xml_file_list is None:
             xml_file_list = []
         self._data_list = None
@@ -61,11 +61,12 @@ class UnimodMapper(object):
             with open(full_path, "wb") as file:
                 file.write(response.content)
 
-        self.unimod_xml_names = xml_file_list
-        names = [x.name for x in xml_file_list]
-        for xml in ["usermod.xml", "unimod.xml"]:
-            if xml not in names:
-                self.unimod_xml_names.append(Path(__file__).parent.joinpath(xml))
+        self.unimod_xml_names = xml_file_list.copy()
+        if add_default_files is True:
+            names = [x.name for x in xml_file_list]
+            for xml in ["usermod.xml", "unimod.xml"]:
+                if xml not in names:
+                    self.unimod_xml_names.append(Path(__file__).parent.joinpath(xml))
 
     @property
     def data_list(self):
@@ -150,21 +151,15 @@ class UnimodMapper(object):
                             pass
             else:
                 if xml_path.name == "unimod.xml":
-                    logger.warning(
-                        "No unimod.xml file found. Expected at {0}".format(xml_path)
-                    )
+                    logger.warning(f"No unimod.xml file found. Expected at {xml_path}")
                     # at least unimod.xml HAS to be available!
                     print(xml_path)
                     sys.exit(1)
                 elif xml_path.name == "usermod.xml":
-                    logger.info(
-                        "No usermod.xml file found. Expected at {0}".format(xml_path)
-                    )
+                    logger.info(f"No usermod.xml file found. Expected at {xml_path}")
                     continue
                 else:
-                    logger.warning(
-                        "Specified file not found. Expected at {0}".format(xml_path)
-                    )
+                    logger.warning(f"Specified file not found. Expected at {xml_path}")
                     sys.exit(1)
         return data_list
 
@@ -172,6 +167,11 @@ class UnimodMapper(object):
         """Set up the mapper and generate the index dict"""
         mapper = {}
         for index, unimod_data_dict in enumerate(self.data_list):
+            if unimod_data_dict["unimodname"] in mapper.keys():
+                name = unimod_data_dict["unimodname"]
+                id = unimod_data_dict["unimodID"]
+                logger.warning(f"Warning: unimod {name} (ID {id}) is duplicated")
+
             for key, value in unimod_data_dict.items():
                 if key == "element":
                     MAJORS = ["C", "H"]
@@ -734,7 +734,7 @@ class UnimodMapper(object):
 
         for modification_dict in mod_dicts:
             if modification_dict.get("id", None) == None:
-                modification_dict["id"] = "u{0}".format(len(mod_dicts))
+                modification_dict["id"] = f"u{len(mod_dicts)}"
             mod = ET.SubElement(
                 modifications,
                 "{usermod}mod",

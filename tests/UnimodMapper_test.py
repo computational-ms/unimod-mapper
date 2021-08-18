@@ -249,8 +249,28 @@ CONVERSIONS = [
 
 MULTIFILE_TESTS = [
     {
+        "order": [usermod_path],
+        "entries": 20,
+        "excluded": [
+            {"in": "TMTpro", "out": [""]},
+            {"in": "SILAC K+6 TMT", "out": [""]},
+            {"in": "ICAT-G:2H(8)", "out": []},
+        ],
+        "included": [
+            {"in": "TMTpro", "out": ["", "2016"]},
+            {"in": "SILAC K+6 TMT", "out": [""]},
+            {"in": "ICAT-G:2H(8)", "out": ["9"]},
+        ],
+    },
+    {
         "order": [unimod_path, usermod_path],
-        "cases": [
+        "entries": 1506,
+        "excluded": [
+            {"in": "TMTpro", "out": ["2016", ""]},
+            {"in": "SILAC K+6 TMT", "out": [""]},
+            {"in": "ICAT-G:2H(8)", "out": ["9"]},
+        ],
+        "included": [
             {"in": "TMTpro", "out": ["2016", ""]},
             {"in": "SILAC K+6 TMT", "out": [""]},
             {"in": "ICAT-G:2H(8)", "out": ["9"]},
@@ -258,7 +278,13 @@ MULTIFILE_TESTS = [
     },
     {
         "order": [usermod_path, unimod_path],
-        "cases": [
+        "entries": 1506,
+        "excluded": [
+            {"in": "TMTpro", "out": ["", "2016"]},
+            {"in": "SILAC K+6 TMT", "out": [""]},
+            {"in": "ICAT-G:2H(8)", "out": ["9"]},
+        ],
+        "included": [
             {"in": "TMTpro", "out": ["", "2016"]},
             {"in": "SILAC K+6 TMT", "out": [""]},
             {"in": "ICAT-G:2H(8)", "out": ["9"]},
@@ -293,11 +319,21 @@ class TestXMLIntegrity:
         assert M.mass2name_list(1337.42) == ["GnomeChompski"]
         xml_file.unlink()
 
+    def test_read_usermod_file_exclude_defaults(self):
+        # the order of the files shouldn't change the unimodIDs
+        for data in MULTIFILE_TESTS:
+            um = unimod_mapper.UnimodMapper(
+                xml_file_list=data["order"], add_default_files=False
+            )
+            assert len(um.data_list) == data["entries"]
+            for case in data["excluded"]:
+                assert case["out"] == um.name2id_list(case["in"])
+
     def test_read_multiple_unimod_files(self):
         # the order of the files shouldn't change the unimodIDs
         for data in MULTIFILE_TESTS:
             um = unimod_mapper.UnimodMapper(xml_file_list=data["order"])
-            for case in data["cases"]:
+            for case in data["included"]:
                 assert case["out"] == um.name2id_list(case["in"])
 
     def test_unimod_files_is_none(self):
