@@ -6,13 +6,19 @@ from pathlib import Path
 import pytest
 
 # this block is not needed anymore, when we have a proper package
-test_dir = Path(__file__).parent
-package_dir = test_dir.parent
-sys.path.append(package_dir)
+# test_dir = Path(__file__).parent
+# package_dir = test_dir.parent
+# sys.path.append(package_dir)
 # EOBlock
 import unimod_mapper
 
-unimod_path = package_dir.joinpath("unimod_mapper", "unimod.xml")
+package_dir = Path(unimod_mapper.__file__).parent
+test_dir = package_dir.parent.joinpath("tests")
+
+# test_dir = Path(unimod_mapper.__file__).parent.parent / "tests"
+# package_dir = test_dir.parent
+
+unimod_path = package_dir.joinpath("unimod.xml")
 usermod_path = test_dir.joinpath("usermod.xml")
 M = unimod_mapper.UnimodMapper(xml_file_list=[unimod_path, usermod_path, unimod_path])
 
