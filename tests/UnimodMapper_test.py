@@ -13,7 +13,7 @@ import pytest
 import unimod_mapper
 
 package_dir = Path(unimod_mapper.__file__).parent
-test_dir = package_dir.parent.joinpath("tests")
+test_dir = Path(__file__).parent
 
 # test_dir = Path(unimod_mapper.__file__).parent.parent / "tests"
 # package_dir = test_dir.parent
@@ -272,7 +272,7 @@ MULTIFILE_TESTS = [
     },
     {
         "order": [unimod_path, usermod_path],
-        "entries": 1506,
+        "entries": 1519,
         "excluded": [
             {"in": "TMTpro", "out": ["2016", ""]},
             {"in": "SILAC K+6 TMT", "out": [""]},
@@ -286,7 +286,7 @@ MULTIFILE_TESTS = [
     },
     {
         "order": [usermod_path, unimod_path],
-        "entries": 1506,
+        "entries": 1519,
         "excluded": [
             {"in": "TMTpro", "out": ["", "2016"]},
             {"in": "SILAC K+6 TMT", "out": [""]},
