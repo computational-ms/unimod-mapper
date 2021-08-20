@@ -6,13 +6,19 @@ from pathlib import Path
 import pytest
 
 # this block is not needed anymore, when we have a proper package
-test_dir = Path(__file__).parent
-package_dir = test_dir.parent
-sys.path.append(package_dir)
+# test_dir = Path(__file__).parent
+# package_dir = test_dir.parent
+# sys.path.append(package_dir)
 # EOBlock
 import unimod_mapper
 
-unimod_path = package_dir.joinpath("unimod_mapper", "unimod.xml")
+package_dir = Path(unimod_mapper.__file__).parent
+test_dir = Path(__file__).parent
+
+# test_dir = Path(unimod_mapper.__file__).parent.parent / "tests"
+# package_dir = test_dir.parent
+
+unimod_path = package_dir.joinpath("unimod.xml")
 usermod_path = test_dir.joinpath("usermod.xml")
 M = unimod_mapper.UnimodMapper(xml_file_list=[unimod_path, usermod_path, unimod_path])
 
@@ -209,10 +215,12 @@ CONVERSIONS = [
                 "in": {"args": ["C(2)H(3)N(1)O(1)"]},
                 "out": [
                     "Carbamidomethyl",
+                    "Carbofuran",
                     "Ala->Gln",
                     "Gly->Asn",
                     "Gly",
                     "Carbamidomethyl",
+                    "Carbofuran",
                     "Ala->Gln",
                     "Gly->Asn",
                     "Gly",
@@ -264,7 +272,7 @@ MULTIFILE_TESTS = [
     },
     {
         "order": [unimod_path, usermod_path],
-        "entries": 1506,
+        "entries": 1519,
         "excluded": [
             {"in": "TMTpro", "out": ["2016", ""]},
             {"in": "SILAC K+6 TMT", "out": [""]},
@@ -278,7 +286,7 @@ MULTIFILE_TESTS = [
     },
     {
         "order": [usermod_path, unimod_path],
-        "entries": 1506,
+        "entries": 1519,
         "excluded": [
             {"in": "TMTpro", "out": ["", "2016"]},
             {"in": "SILAC K+6 TMT", "out": [""]},
