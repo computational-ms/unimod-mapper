@@ -888,7 +888,7 @@ class UnimodMapper(object):
                 unimod_name = mod_dict["name"]
                 chemical_formula = mod_dict["composition"]
                 chemical_composition = ChemicalComposition()
-                chemical_composition.add_chemical_formula(chemical_formula)
+                chemical_composition.use(formula=chemical_formula)
                 composition = chemical_composition
                 composition_unimod_style = chemical_composition.hill_notation_unimod()
                 unimod_name_list = self.composition2name_list(composition_unimod_style)
