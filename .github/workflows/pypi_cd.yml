@@ -3,7 +3,7 @@ on:
     tags:
       - v*
 jobs:
-  test_pypi:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -14,10 +14,8 @@ jobs:
         echo 'Is tag ${{ startsWith(github.even.ref, "refs.tags")'
       - uses: casperdcl/deploy-pypi@v2
         with:
-          user: __token__
-          password: ${{ secrets.TEST_PYPI_PASSWORD }}
+          password: ${{ secrets.PROD_PYPI }}
           requirements: twine wheel
           pip: wheel -w dist/ --no-deps .
           # only upload if a tag is pushed (otherwise just build & check)
-          upload: ${{ github.event_name == 'push' && startsWith(github.event.ref, 'refs/tags') }}
-          url: https://test.pypi.org/legacy/
+          upload: ${{ github.event_name == 'create' && startsWith(github.event.ref, 'v') }}
