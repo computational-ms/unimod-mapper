@@ -21,10 +21,9 @@ setup(
     package_data={
         "unimod_mapper": [
             "version.txt",
-            "unimod.xml",
         ]
     },
-    python_requires=">=3.6.0",
+    python_requires=">=3.7.0",
     install_requires=requirements,
     long_description="Unimod Mapper for Proteomics Tools",
     author="Christian Fufezan, Manuel Kösters, Johannes Leufken, Stefan Schulze",
