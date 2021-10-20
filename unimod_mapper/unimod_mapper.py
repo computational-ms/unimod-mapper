@@ -160,7 +160,7 @@ class UnimodMapper(object):
                     print(xml_path)
                     sys.exit(1)
                 elif xml_path.name == "usermod.xml":
-                    logger.info(f"No usermod.xml file found. Expected at {xml_path}")
+                    logger.debug(f"No usermod.xml file found. Expected at {xml_path}")
                     continue
                 else:
                     logger.warning(f"Specified file not found. Expected at {xml_path}")
