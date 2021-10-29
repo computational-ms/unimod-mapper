@@ -97,7 +97,7 @@ class UnimodMapper(object):
         for xml_file in xml_file_list:
             xml_path = Path(xml_file)
             if xml_path.exists():
-                logger.info("> Parsing mods file ({0})".format(xml_path))
+                logger.debug("Parsing mods file ({0})".format(xml_path))
                 unimodXML = ET.iterparse(
                     codecs.open(xml_path, "r", encoding="utf8"),
                     events=(b"start", b"end"),
@@ -160,7 +160,7 @@ class UnimodMapper(object):
                     print(xml_path)
                     sys.exit(1)
                 elif xml_path.name == "usermod.xml":
-                    logger.info(f"No usermod.xml file found. Expected at {xml_path}")
+                    logger.debug(f"No usermod.xml file found. Expected at {xml_path}")
                     continue
                 else:
                     logger.warning(f"Specified file not found. Expected at {xml_path}")
