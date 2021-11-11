@@ -219,6 +219,27 @@ class UnimodMapper(object):
             )
         return mapper
 
+    def _add_to_return_list(self, return_list=None, already_seen=None, entry=None):
+        """Add entry to list while maintaining sorted status in return_list
+
+        Args:
+            return_list (list): [description]
+            already_seen (list): [description]. Defaults to None.
+            entry (object): [description]. Defaults to None.
+
+        Returns:
+            tuple: updated return_list, already_seen
+        """
+        if isinstance(entry, dict) is True:
+            hashable = sorted(tuple(entry.items()))
+        else:
+            hashable = entry
+        if hashable not in already_seen:
+            index = bisect.bisect(already_seen, hashable)
+            already_seen.insert(index, hashable)
+            return_list.insert(index, entry)
+        return return_list, already_seen
+
     # name 2 ....
     def name2mass_list(self, unimod_name):
         """
@@ -265,23 +286,18 @@ class UnimodMapper(object):
         Returns:
             list: list of Unimod compositions
         """
-        list_2_return = []
+        return_list = []
         already_seen = []
         index_list = self.mapper.get(unimod_name, None)
         if index_list is not None:
             for index in index_list:
                 entry = self._data_list_2_value(index, "element")
-                if isinstance(entry, dict) is True:
-                    hashable = sorted(tuple(entry.items()))
-                else:
-                    hashable = entry
-
-                if hashable in already_seen:
-                    continue
-                index = bisect.bisect(already_seen, hashable)
-                already_seen.insert(index, hashable)
-                list_2_return.insert(index, entry)
-        return list_2_return
+                return_list, already_seen = self._add_to_return_list(
+                    return_list=return_list,
+                    already_seen=already_seen,
+                    entry=entry,
+                )
+        return return_list
 
     def name2first_composition(self, unimod_name):
         """
@@ -424,22 +440,18 @@ class UnimodMapper(object):
         """
         if isinstance(unimod_id, int) is True:
             unimod_id = str(unimod_id)
-        list_2_return = []
+        return_list = []
         already_seen = []
         index_list = self.mapper.get(unimod_id, None)
         if index_list is not None:
             for index in index_list:
                 entry = self._data_list_2_value(index, "element")
-                if isinstance(entry, dict) is True:
-                    hashable = sorted(tuple(entry.items()))
-                else:
-                    hashable = entry
-                if hashable in already_seen:
-                    continue
-                index = bisect.bisect(already_seen, hashable)
-                already_seen.insert(index, hashable)
-                list_2_return.insert(index, entry)
-        return list_2_return
+                return_list, already_seen = self._add_to_return_list(
+                    return_list=return_list,
+                    already_seen=already_seen,
+                    entry=entry,
+                )
+        return return_list
 
     def id2first_composition(self, unimod_id):
         """
@@ -566,22 +578,17 @@ class UnimodMapper(object):
             list: Unimod elemental compositions
         """
 
-        list_2_return = []
+        return_list = []
         already_seen = []
         for index in self.mapper[mass]:
-            element_dict = self._data_list_2_value(index, "element")
-            hashable = sorted(tuple(element_dict.items()))
-            if hashable in already_seen:
-                continue
-            else:
-                index = bisect.bisect(already_seen, hashable)
-                already_seen.insert(index, hashable)
-                list_2_return.insert(
-                    index,
-                    element_dict,
-                )
+            entry = self._data_list_2_value(index, "element")
+            return_list, already_seen = self._add_to_return_list(
+                return_list=return_list,
+                already_seen=already_seen,
+                entry=entry,
+            )
 
-        return list_2_return
+        return return_list
 
     def appMass2id_list(self, mass, decimal_places=2):
         """
@@ -737,17 +744,12 @@ class UnimodMapper(object):
             umass = entry["mono_mass"]
             rounded_umass = round(float(umass), decimal_places)
             if abs(rounded_umass - mass) <= sys.float_info.epsilon:
-                if isinstance(entry[entry_key], dict) is True:
-                    hashable = sorted(tuple(entry[entry_key].items()))
-                else:
-                    hashable = entry[entry_key]
 
-                if hashable in already_seen:
-                    continue
-                else:
-                    index = bisect.bisect(already_seen, hashable)
-                    already_seen.insert(index, hashable)
-                    return_list.insert(index, entry[entry_key])
+                return_list, already_seen = self._add_to_return_list(
+                    return_list=return_list,
+                    already_seen=already_seen,
+                    entry=entry[entry_key],
+                )
         return return_list
 
     def _map_key_2_index_2_value(self, map_key, return_key):
