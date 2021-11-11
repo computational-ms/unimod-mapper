@@ -25,15 +25,15 @@ M = unimod_mapper.UnimodMapper(xml_file_list=[unimod_path, usermod_path, unimod_
 
 CONVERSIONS = [
     {
-        "function": M.name2mass_list,
+        "function": "name2mass_list",
         "cases": [{"in": {"args": ["ICAT-G:2H(8)"]}, "out": [494.30142]}],
     },
     {
-        "function": M.name2first_mass,
+        "function": "name2first_mass",
         "cases": [{"in": {"args": ["ICAT-G:2H(8)"]}, "out": 494.30142}],
     },
     {
-        "function": M.name2composition_list,
+        "function": "name2composition_list",
         "cases": [
             {
                 "in": {"args": ["ICAT-G:2H(8)"]},
@@ -44,7 +44,7 @@ CONVERSIONS = [
         ],
     },
     {
-        "function": M.name2first_composition,
+        "function": "name2first_composition",
         "cases": [
             {
                 "in": {"args": ["ICAT-G:2H(8)"]},
@@ -53,29 +53,29 @@ CONVERSIONS = [
         ],
     },
     {
-        "function": M.name2id_list,
+        "function": "name2id_list",
         "cases": [{"in": {"args": ["ICAT-G:2H(8)"]}, "out": ["9"]}],  #
     },
     {
-        "function": M.name2first_id,
+        "function": "name2first_id",
         "cases": [{"in": {"args": ["ICAT-G:2H(8)"]}, "out": "9"}],  #
     },
     {
-        "function": M.id2mass_list,
+        "function": "id2mass_list",
         "cases": [
             {"in": {"args": ["9"]}, "out": [494.30142]},
             {"in": {"args": [9]}, "out": [494.30142]},
         ],
     },  #
     {
-        "function": M.id2first_mass,
+        "function": "id2first_mass",
         "cases": [
             {"in": {"args": ["9"]}, "out": 494.30142},
             {"in": {"args": [9]}, "out": 494.30142},
         ],
     },  #
     {
-        "function": M.id2composition_list,
+        "function": "id2composition_list",
         "cases": [
             {
                 "in": {"args": ["9"]},
@@ -92,7 +92,7 @@ CONVERSIONS = [
         ],
     },
     {
-        "function": M.id2first_composition,
+        "function": "id2first_composition",
         "cases": [
             {
                 "in": {"args": ["9"]},
@@ -105,31 +105,31 @@ CONVERSIONS = [
         ],
     },
     {
-        "function": M.id2name_list,
+        "function": "id2name_list",
         "cases": [
             {"in": {"args": ["9"]}, "out": ["ICAT-G:2H(8)"]},
             {"in": {"args": [9]}, "out": ["ICAT-G:2H(8)"]},
         ],
     },  #
     {
-        "function": M.id2first_name,
+        "function": "id2first_name",
         "cases": [
             {"in": {"args": ["9"]}, "out": "ICAT-G:2H(8)"},
             {"in": {"args": [9]}, "out": "ICAT-G:2H(8)"},
         ],
     },  #
     {
-        "function": M.mass2name_list,
+        "function": "mass2name_list",
         "cases": [
             {"in": {"args": [494.30142]}, "out": ["ICAT-G:2H(8)"]},
         ],  #
     },
     {
-        "function": M.mass2id_list,
+        "function": "mass2id_list",
         "cases": [{"in": {"args": [494.30142]}, "out": ["9"]}],  #
     },
     {
-        "function": M.mass2composition_list,
+        "function": "mass2composition_list",
         "cases": [
             {
                 "in": {"args": [494.30142]},
@@ -140,7 +140,7 @@ CONVERSIONS = [
         ],
     },
     {
-        "function": M.appMass2id_list,
+        "function": "appMass2id_list",
         "cases": [
             {
                 "in": {"args": [18], "kwargs": {"decimal_places": 0}},
@@ -156,7 +156,7 @@ CONVERSIONS = [
         ],
     },
     # { # DEPENDS ON USED XML SO TEST WILL FAIL
-    #     "function": M.appMass2element_list,
+    #     "function": "appMass2element_list",
     #     "cases": [
     #         {
     #             "in": {"args": [18], "kwargs": {"decimal_places": 0}},
@@ -172,7 +172,7 @@ CONVERSIONS = [
     #     ],
     # },
     {
-        "function": M.appMass2name_list,
+        "function": "appMass2name_list",
         "cases": [
             {
                 "in": {"args": [18], "kwargs": {"decimal_places": 0}},
@@ -188,7 +188,7 @@ CONVERSIONS = [
         ],
     },
     {
-        "function": M.composition2name_list,
+        "function": "composition2name_list",
         "cases": [
             {
                 "in": {"args": ["C(2)H(3)N(1)O(1)"]},
@@ -203,26 +203,26 @@ CONVERSIONS = [
         ],
     },
     {
-        "function": M.name2specificity_list,
+        "function": "name2specificity_list",
         "cases": [
             {
                 "in": {"args": ["Ala->Gln"]},
-                "out": [[("A", "AA substitution")], [("A", "AA substitution")]],
+                "out": [(("A", "AA substitution"),)],
             }
         ],  #
     },
     {
-        "function": M.composition2id_list,
+        "function": "composition2id_list",
         "cases": [{"in": {"args": ["C(22)H(30)2H(8)N(4)O(6)S(1)"]}, "out": ["9"]}],  #
     },
     {
-        "function": M.composition2mass,
+        "function": "composition2mass",
         "cases": [
             {"in": {"args": ["C(22)H(30)2H(8)N(4)O(6)S(1)"]}, "out": 494.30142}  #
         ],
     },
     {
-        "function": M._map_key_2_index_2_value,
+        "function": "_map_key_2_index_2_value",
         "cases": [{"in": {"args": ["ThisKeyIsNotPresent", "mass"]}, "out": None}],  #
     },
 ]
@@ -273,53 +273,62 @@ MULTIFILE_TESTS = [
 ]
 
 
-class TestXMLIntegrity:
-    @pytest.mark.parametrize("conversion", CONVERSIONS)
-    def test_conversion(self, conversion):
-        for case in conversion["cases"]:
-            converted = conversion["function"](
-                *case["in"].get("args", []), **case["in"].get("kwargs", {})
-            )
-            print(conversion)
-            print(converted)
-            assert case["out"] == converted
+@pytest.mark.parametrize("conversion", CONVERSIONS)
+def test_conversion(conversion, init_basic_unimod_mapper):
+    for case in conversion["cases"]:
+        function = init_basic_unimod_mapper.__getattribute__(conversion["function"])
+        converted = function(
+            *case["in"].get("args", []), **case["in"].get("kwargs", {})
+        )
+        print(conversion)
+        print(converted)
+        assert case["out"] == converted
 
-        #     def crash_test(self):
-        #         with self.assertRaises(SystemExit) as system_exit_check:
-        #             self.alt_mapper._parseXML()
-        #         self.assertEqual(system_exit_check.exception.code, 1)
+    #     def crash_test(self):
+    #         with self.assertRaises(SystemExit) as system_exit_check:
+    #             self.alt_mapper._parseXML()
+    #         self.assertEqual(system_exit_check.exception.code, 1)
 
-    def test_write(self):
-        xml_file = test_dir.joinpath("test_only_unimod.xml")
-        assert xml_file.exists() is False
-        mod_dict = {
-            "mass": 1337.42,
-            "name": "GnomeChompski",
-            "composition": {"L": 4, "D": 2},
-        }
-        M.writeXML(mod_dict, xml_file=xml_file)
-        assert os.path.exists(xml_file)
-        assert M.mass2name_list(1337.42) == ["GnomeChompski"]
-        xml_file.unlink()
 
-    def test_read_usermod_file_exclude_defaults(self):
-        # the order of the files shouldn't change the unimodIDs
-        for data in MULTIFILE_TESTS:
-            um = unimod_mapper.UnimodMapper(
-                xml_file_list=data["order"], add_default_files=False
-            )
-            assert len(um.data_list) == data["entries"]
-            for case in data["excluded"]:
-                assert case["out"] == um.name2id_list(case["in"])
+def test_write(init_basic_unimod_mapper):
+    xml_file = test_dir.joinpath("test_only_unimod.xml")
+    assert xml_file.exists() is False
+    mod_dict = {
+        "mass": 1337.42,
+        "name": "GnomeChompski",
+        "composition": {"L": 4, "D": 2},
+    }
+    init_basic_unimod_mapper.writeXML(mod_dict, xml_file=xml_file)
+    assert os.path.exists(xml_file)
+    assert init_basic_unimod_mapper.mass2name_list(1337.42) == ["GnomeChompski"]
+    xml_file.unlink()
 
-    def test_read_multiple_unimod_files(self):
-        # the order of the files shouldn't change the unimodIDs
-        for data in MULTIFILE_TESTS:
-            um = unimod_mapper.UnimodMapper(xml_file_list=data["order"])
-            for case in data["included"]:
-                assert case["out"] == um.name2id_list(case["in"])
 
-    def test_unimod_files_is_none(self):
-        um = unimod_mapper.UnimodMapper(xml_file_list=None)
-        names = [x.name for x in um.unimod_xml_names]
-        assert names == ["usermod.xml", "unimod.xml"]
+def test_read_usermod_file_exclude_defaults(init_basic_unimod_mapper):
+    # the order of the files shouldn't change the unimodIDs
+    for data in MULTIFILE_TESTS:
+        um = unimod_mapper.UnimodMapper(
+            xml_file_list=data["order"],
+            add_default_files=False,
+        )
+        assert len(um.data_list) == data["entries"]
+        for case in data["excluded"]:
+            assert case["out"] == um.name2id_list(case["in"])
+
+
+def test_read_multiple_unimod_files(init_basic_unimod_mapper):
+    # the order of the files shouldn't change the unimodIDs
+    for data in MULTIFILE_TESTS:
+        um = unimod_mapper.UnimodMapper(
+            xml_file_list=data["order"],
+        )
+        for case in data["included"]:
+            assert case["out"] == um.name2id_list(case["in"])
+
+
+def test_unimod_files_is_none():
+    um = unimod_mapper.UnimodMapper(
+        xml_file_list=None,
+    )
+    names = [x.name for x in um.unimod_xml_names]
+    assert sorted(names) == sorted(["usermod.xml", "unimod.xml"])

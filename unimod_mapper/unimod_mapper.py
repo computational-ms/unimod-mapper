@@ -22,7 +22,9 @@ import xml.etree.ElementTree as ET
 import xml.dom.minidom as xmldom
 import requests
 import bisect
-
+import math
+import itertools
+from collections import defaultdict as ddict
 from pathlib import Path
 from loguru import logger
 
@@ -36,7 +38,7 @@ class UnimodMapper(object):
 
     Mapping from e.g. name to composition or unimod ID to mass is possible.
 
-    Please refer to `unimod`_ for further informations on modifications
+    Please refer to `unimod`_ for further information on modifications
     including naming, formulas, masses etc.
 
     .. _unimod:
@@ -44,11 +46,17 @@ class UnimodMapper(object):
 
     """
 
-    def __init__(self, refresh_xml=False, xml_file_list=None, add_default_files=True):
+    def __init__(
+        self,
+        refresh_xml=False,
+        xml_file_list=None,
+        add_default_files=True,
+    ):
         if xml_file_list is None:
             xml_file_list = []
         self._data_list = None
         self._mapper = None
+        self._combos = {}
 
         # Check if unimod.xml file exists & if not reset refresh_xml flag
         full_path = Path(__file__).parent / "unimod.xml"
@@ -93,6 +101,7 @@ class UnimodMapper(object):
         if xml_file_list is None:
             xml_file_list = []
         data_list = []
+        already_seen = set()
         for xml_file in xml_file_list:
             xml_path = Path(xml_file)
             if xml_path.exists():
@@ -149,7 +158,9 @@ class UnimodMapper(object):
                         if element.tag.endswith("}delta"):
                             collect_element = False
                         elif element.tag.endswith("}mod"):
-                            data_list.append(tmp)
+                            if str(tmp) not in already_seen:
+                                already_seen.add(str(tmp))
+                                data_list.append(tmp)
                         else:
                             pass
             else:
@@ -164,6 +175,7 @@ class UnimodMapper(object):
                 else:
                     logger.warning(f"Specified file not found. Expected at {xml_path}")
                     sys.exit(1)
+        logger.debug(f"Parsed {len(data_list)} entries from the xml")
         return data_list
 
     def _update_mapper(self, unimod_data_dict=None, mapper=None, index=None):
@@ -240,6 +252,36 @@ class UnimodMapper(object):
             return_list.insert(index, entry)
         return return_list, already_seen
 
+    def mass_to_combos(self, mass, n=2, decimals=3):
+        fraction = 1 / 10 ** decimals
+        if n not in self._combos.keys():
+            self._combos[n] = self._generate_mass_combos(n=n)
+        lower_boundary = mass - 5 * fraction
+        # lower_index = bisect.bisect_left(
+        #     self._combos[n], lower_boundary, key=lambda x: x[0]
+        # )
+        lower_index = bisect.bisect_left(
+            [x[0] for x in self._combos[n]], lower_boundary
+        )
+
+        upper_boundary = mass + 4 * fraction
+        # upper_index = bisect.bisect_right(
+        #     self._combos[n], upper_boundary, key=lambda x: x[0]
+        # )
+        upper_index = bisect.bisect_right(
+            [x[0] for x in self._combos[n]],
+            upper_boundary,
+        )
+        return self._combos[n][lower_index:upper_index]
+
+    def _generate_mass_combos(self, n=2):
+        mass_list = []
+        for combo in itertools.combinations_with_replacement(self.data_list, n):
+            combo_mass = sum((c["mono_mass"] for c in combo))
+            combo_name = [c["unimodname"] for c in combo]
+            mass_list.append((combo_mass, combo_name))
+        return sorted(mass_list)
+
     # name 2 ....
     def name2mass_list(self, unimod_name):
         """
@@ -251,12 +293,18 @@ class UnimodMapper(object):
         Returns:
             list: list of Unimod mono isotopic masses
         """
-        list_2_return = []
+        return_list = []
+        already_seen = []
         index_list = self.mapper.get(unimod_name, None)
         if index_list is not None:
             for index in index_list:
-                list_2_return.append(self._data_list_2_value(index, "mono_mass"))
-        return sorted(set(list_2_return))
+                entry = self._data_list_2_value(index, "mono_mass")
+                return_list, already_seen = self._add_to_return_list(
+                    return_list=return_list,
+                    already_seen=already_seen,
+                    entry=entry,
+                )
+        return return_list
 
     def name2first_mass(self, unimod_name):
         """
@@ -384,9 +432,11 @@ class UnimodMapper(object):
         index_list = self.mapper.get(unimod_name, None)
         if index_list is not None:
             for index in index_list:
-                list_2_return.append(self._data_list_2_value(index, "specificity"))
-
-        return list_2_return
+                list_2_return.append(
+                    tuple(self._data_list_2_value(index, "specificity"))
+                )
+        print(list_2_return)
+        return sorted(set(list_2_return))
 
     # unimodid 2 ....
     def id2mass_list(self, unimod_id):
@@ -543,10 +593,16 @@ class UnimodMapper(object):
         Returns:
             list: Unimod names
         """
-        list_2_return = []
+        return_list = []
+        already_seen = []
         for index in self.mapper[mass]:
-            list_2_return.append(self._data_list_2_value(index, "unimodname"))
-        return sorted(set(list_2_return))
+            entry = self._data_list_2_value(index, "unimodname")
+            return_list, already_seen = self._add_to_return_list(
+                return_list=return_list,
+                already_seen=already_seen,
+                entry=entry,
+            )
+        return return_list
 
     def mass2id_list(self, mass):
         """
