@@ -17,12 +17,11 @@
 
 """
 import sys
-import os
 import codecs
 import xml.etree.ElementTree as ET
 import xml.dom.minidom as xmldom
 import requests
-import copy
+import bisect
 
 from pathlib import Path
 from loguru import logger
@@ -167,40 +166,57 @@ class UnimodMapper(object):
                     sys.exit(1)
         return data_list
 
+    def _update_mapper(self, unimod_data_dict=None, mapper=None, index=None):
+        """Updates the mapper dict with a given unimod_data_dict
+
+        Args:
+            unimod_data_dict (dict): dict extracted from the unimod_xml_entry
+            mapper (dict): Data strategy structure for internal use
+        """
+        if mapper is None:
+            mapper = {}
+        if unimod_data_dict["unimodname"] in mapper.keys():
+            name = unimod_data_dict["unimodname"]
+            id = unimod_data_dict["unimodID"]
+            logger.debug(f"Warning: unimod {name} (ID {id}) is duplicated")
+
+        for key, value in unimod_data_dict.items():
+            if key == "element":
+                MAJORS = ["C", "H"]
+                hill_notation = ""
+                for major in MAJORS:
+                    if major in unimod_data_dict[key].keys():
+                        hill_notation += "{0}({1})".format(
+                            major, unimod_data_dict[key][major]
+                        )
+                for symbol, number in sorted(unimod_data_dict[key].items()):
+                    if symbol in MAJORS:
+                        continue
+                    hill_notation += "{0}({1})".format(symbol, number)
+
+                if hill_notation not in mapper.keys():
+                    mapper[hill_notation] = []
+                mapper[hill_notation].append(index)
+            elif key == "specificity":
+                pass
+            elif key == "neutral_loss":
+                pass
+            else:
+                if value not in mapper.keys():
+                    mapper[value] = []
+                mapper[value].append(index)
+        return mapper
+
     def _initialize_mapper(self):
         """Set up the mapper and generate the index dict"""
+
         mapper = {}
         for index, unimod_data_dict in enumerate(self.data_list):
-            if unimod_data_dict["unimodname"] in mapper.keys():
-                name = unimod_data_dict["unimodname"]
-                id = unimod_data_dict["unimodID"]
-                logger.warning(f"Warning: unimod {name} (ID {id}) is duplicated")
-
-            for key, value in unimod_data_dict.items():
-                if key == "element":
-                    MAJORS = ["C", "H"]
-                    hill_notation = ""
-                    for major in MAJORS:
-                        if major in unimod_data_dict[key].keys():
-                            hill_notation += "{0}({1})".format(
-                                major, unimod_data_dict[key][major]
-                            )
-                    for symbol, number in sorted(unimod_data_dict[key].items()):
-                        if symbol in MAJORS:
-                            continue
-                        hill_notation += "{0}({1})".format(symbol, number)
-
-                    if hill_notation not in mapper.keys():
-                        mapper[hill_notation] = []
-                    mapper[hill_notation].append(index)
-                elif key == "specificity":
-                    pass
-                elif key == "neutral_loss":
-                    pass
-                else:
-                    if value not in mapper.keys():
-                        mapper[value] = []
-                    mapper[value].append(index)
+            mapper = self._update_mapper(
+                unimod_data_dict=unimod_data_dict,
+                mapper=mapper,
+                index=index,
+            )
         return mapper
 
     # name 2 ....
@@ -219,7 +235,7 @@ class UnimodMapper(object):
         if index_list is not None:
             for index in index_list:
                 list_2_return.append(self._data_list_2_value(index, "mono_mass"))
-        return list_2_return
+        return sorted(set(list_2_return))
 
     def name2first_mass(self, unimod_name):
         """
@@ -250,10 +266,21 @@ class UnimodMapper(object):
             list: list of Unimod compositions
         """
         list_2_return = []
+        already_seen = []
         index_list = self.mapper.get(unimod_name, None)
         if index_list is not None:
             for index in index_list:
-                list_2_return.append(self._data_list_2_value(index, "element"))
+                entry = self._data_list_2_value(index, "element")
+                if isinstance(entry, dict) is True:
+                    hashable = sorted(tuple(entry.items()))
+                else:
+                    hashable = entry
+
+                if hashable in already_seen:
+                    continue
+                index = bisect.bisect(already_seen, hashable)
+                already_seen.insert(index, hashable)
+                list_2_return.insert(index, entry)
         return list_2_return
 
     def name2first_composition(self, unimod_name):
@@ -289,7 +316,7 @@ class UnimodMapper(object):
         if index_list is not None:
             for index in index_list:
                 list_2_return.append(self._data_list_2_value(index, "unimodID"))
-        return list_2_return
+        return sorted(set(list_2_return))
 
     def name2first_id(self, unimod_name):
         """
@@ -363,7 +390,7 @@ class UnimodMapper(object):
         if index_list is not None:
             for index in index_list:
                 list_2_return.append(self._data_list_2_value(index, "mono_mass"))
-        return list_2_return
+        return sorted(set(list_2_return))
 
     def id2first_mass(self, unimod_id):
         """
@@ -398,10 +425,20 @@ class UnimodMapper(object):
         if isinstance(unimod_id, int) is True:
             unimod_id = str(unimod_id)
         list_2_return = []
+        already_seen = []
         index_list = self.mapper.get(unimod_id, None)
         if index_list is not None:
             for index in index_list:
-                list_2_return.append(self._data_list_2_value(index, "element"))
+                entry = self._data_list_2_value(index, "element")
+                if isinstance(entry, dict) is True:
+                    hashable = sorted(tuple(entry.items()))
+                else:
+                    hashable = entry
+                if hashable in already_seen:
+                    continue
+                index = bisect.bisect(already_seen, hashable)
+                already_seen.insert(index, hashable)
+                list_2_return.insert(index, entry)
         return list_2_return
 
     def id2first_composition(self, unimod_id):
@@ -441,7 +478,7 @@ class UnimodMapper(object):
         if index_list is not None:
             for index in index_list:
                 list_2_return.append(self._data_list_2_value(index, "unimodname"))
-        return list_2_return
+        return sorted(set(list_2_return))
 
     def id2first_name(self, unimod_id):
         """
@@ -480,9 +517,9 @@ class UnimodMapper(object):
         if index_list is not None:
             for index in index_list:
                 list_2_return.append(self._data_list_2_value(index, "neutral_loss"))
-        return list_2_return
+        return sorted(set(list_2_return))
 
-    # mass is ambigous therefore a list is returned
+    # mass is ambiguous therefore a list is returned
     def mass2name_list(self, mass):
         """
         Converts unimod mass to unimod name list,
@@ -497,7 +534,7 @@ class UnimodMapper(object):
         list_2_return = []
         for index in self.mapper[mass]:
             list_2_return.append(self._data_list_2_value(index, "unimodname"))
-        return list_2_return
+        return sorted(set(list_2_return))
 
     def mass2id_list(self, mass):
         """
@@ -515,7 +552,7 @@ class UnimodMapper(object):
         if index_list is not None:
             for index in index_list:
                 list_2_return.append(self._data_list_2_value(index, "unimodID"))
-        return list_2_return
+        return sorted(set(list_2_return))
 
     def mass2composition_list(self, mass):
         """
@@ -530,8 +567,20 @@ class UnimodMapper(object):
         """
 
         list_2_return = []
+        already_seen = []
         for index in self.mapper[mass]:
-            list_2_return.append(self._data_list_2_value(index, "element"))
+            element_dict = self._data_list_2_value(index, "element")
+            hashable = sorted(tuple(element_dict.items()))
+            if hashable in already_seen:
+                continue
+            else:
+                index = bisect.bisect(already_seen, hashable)
+                already_seen.insert(index, hashable)
+                list_2_return.insert(
+                    index,
+                    element_dict,
+                )
+
         return list_2_return
 
     def appMass2id_list(self, mass, decimal_places=2):
@@ -556,10 +605,10 @@ class UnimodMapper(object):
                 ['127', '329', '608', '1079', '1167']
 
         """
-        return_list = self._appMass2whatever(
+
+        return self._appMass2whatever(
             mass, decimal_places=decimal_places, entry_key="unimodID"
         )
-        return return_list
 
     def appMass2element_list(self, mass, decimal_places=2):
         """
@@ -586,10 +635,9 @@ class UnimodMapper(object):
 
 
         """
-        return_list = self._appMass2whatever(
+        return self._appMass2whatever(
             mass, decimal_places=decimal_places, entry_key="element"
         )
-        return return_list
 
     def appMass2name_list(self, mass, decimal_places=2):
         """
@@ -613,10 +661,9 @@ class UnimodMapper(object):
                 ['Fluoro', 'Methyl:2H(3)13C(1)', 'Xle->Met', 'Glu->Phe', 'Pro->Asp']
 
         """
-        return_list = self._appMass2whatever(
+        return self._appMass2whatever(
             mass, decimal_places=decimal_places, entry_key="unimodname"
         )
-        return return_list
 
     def composition2name_list(self, composition):
         """
@@ -635,7 +682,7 @@ class UnimodMapper(object):
             for index in index_list:
                 value = self._data_list_2_value(index, "unimodname")
                 list_2_return.append(value)
-        return list_2_return
+        return sorted(set(list_2_return))
 
     def composition2id_list(self, composition):
         """
@@ -654,7 +701,7 @@ class UnimodMapper(object):
             for index in index_list:
                 value = self._data_list_2_value(index, "unimodID")
                 list_2_return.append(value)
-        return list_2_return
+        return sorted(set(list_2_return))
 
     def composition2mass(self, composition):
         """
@@ -685,11 +732,22 @@ class UnimodMapper(object):
 
     def _appMass2whatever(self, mass, decimal_places=2, entry_key=None):
         return_list = []
+        already_seen = []
         for entry in self.data_list:
             umass = entry["mono_mass"]
             rounded_umass = round(float(umass), decimal_places)
             if abs(rounded_umass - mass) <= sys.float_info.epsilon:
-                return_list.append(entry[entry_key])
+                if isinstance(entry[entry_key], dict) is True:
+                    hashable = sorted(tuple(entry[entry_key].items()))
+                else:
+                    hashable = entry[entry_key]
+
+                if hashable in already_seen:
+                    continue
+                else:
+                    index = bisect.bisect(already_seen, hashable)
+                    already_seen.insert(index, hashable)
+                    return_list.insert(index, entry[entry_key])
         return return_list
 
     def _map_key_2_index_2_value(self, map_key, return_key):
