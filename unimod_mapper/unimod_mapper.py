@@ -22,6 +22,9 @@ import codecs
 import xml.etree.ElementTree as ET
 import xml.dom.minidom as xmldom
 import requests
+import pandas as pd
+
+pd.set_option("max_columns", 100)
 
 from pathlib import Path
 from loguru import logger
@@ -44,14 +47,23 @@ class UnimodMapper(object):
 
     """
 
+    def deprecated(function):
+        def wrapper_deprecation_warning(*args, **kwargs):
+            logger.warning(
+                f"{function.__name__} is deprecated, please use generic map function"
+            )
+            return function(*args, **kwargs)
+
+        return wrapper_deprecation_warning
+
     def __init__(self, refresh_xml=False, xml_file_list=None):
-        if xml_file_list is None:
-            xml_file_list = []
         self._data_list = None
         self._mapper = None
-
+        self._df = None
+        self._elements = []
         # Check if unimod.xml file exists & if not reset refresh_xml flag
-        full_path = Path(__file__).parent / "unimod.xml"
+        package_dir = Path(__file__).parent.resolve()
+        full_path = package_dir / "unimod.xml"
         if os.path.exists(full_path) is False:
             refresh_xml = True
 
@@ -60,10 +72,12 @@ class UnimodMapper(object):
             with open(full_path, "wb") as file:
                 file.write(response.content)
 
-        self.unimod_xml_names = ["unimod.xml", "usermods.xml"]
-        self.unimod_xml_names.extend(xml_file_list)
-        # self.data_list = self._parseXML()
-        # self.mapper    = self._initialize_mapper()
+        self.unimod_xml_names = [
+            package_dir / "unimod.xml",
+            package_dir / "usermods.xml",
+        ]
+        if xml_file_list is not None:
+            self.unimod_xml_names.extend(xml_file_list)
 
     @property
     def data_list(self):
@@ -89,6 +103,143 @@ class UnimodMapper(object):
     def mapper(self, mapper):
         self._mapper = mapper
         return
+
+    @property
+    def df(self):
+        if self._df is None:
+            self._df = pd.DataFrame(self._parse_in_more_detail_XML())
+            self._df = self._df.explode("specificity").reset_index(drop=True)
+            sites = self._df.specificity.str.split("<\|>", expand=True)
+            sites.columns = ["Site", "Position"]
+            self._df.drop(columns=["specificity"], inplace=True)
+            self._df = self._df.join(sites)
+        return self._df
+
+    def query(self, query_string):
+        return self.df.query(query_string)
+
+    def name_to_mass(self, name):
+        return self.df.query("`Name` == @name")["mono_mass"].to_list()
+
+    def name_to_composition(self, name):
+        return self.df.query("`Name` == @name")["elements"].to_list()
+
+    def name_to_id(self, name):
+        return self.df.query("`Name` == @name")["Accession"].to_list()
+
+    def id_to_mass(self, id):
+        return self.df.query("`Accession` == @id")["mono_mass"].to_list()
+
+    def id_to_composition(self, id):
+        return self.df.query("`Accession` == @id")["elements"].to_list()
+
+    def id_to_name(self, id):
+        return self.df.query("`Accession` == @id")["Name"].to_list()
+
+    def _determin_mass_range(self, mass, decimals=0):
+        fraction = 1 / 10 ** (decimals + 1)
+        lower_mass = mass - 5 * fraction
+        upper_mass = mass + 4 * fraction
+        return lower_mass, upper_mass
+
+    def mass_to_ids(self, mass, decimals=0):
+        """This is a many to many relation ship hence unique() ids are reported"""
+        lower_mass, upper_mass = self._determin_mass_range(mass, decimals=decimals)
+        return (
+            self.df.query("@lower_mass <= `mono_mass` <= @upper_mass")["Accession"]
+            .unique()
+            .tolist()
+        )
+
+    def mass_to_compositions(self, mass, decimals=0):
+        """This is a many to many relation ship hence unique() ids are reported"""
+        lower_mass, upper_mass = self._determin_mass_range(mass, decimals=decimals)
+        return self.df.query("@lower_mass <= `mono_mass` <= @upper_mass")[
+            "elements"
+        ].tolist()
+
+    def mass_to_names(self, mass, decimals=0):
+        lower_mass, upper_mass = self._determin_mass_range(mass, decimals=decimals)
+        return (
+            self.df.query("@lower_mass <= `mono_mass` <= @upper_mass")["Name"]
+            .unique()
+            .tolist()
+        )
+
+    def _extract_elements(self, element):
+        r_dict = {}
+        for sub_element in element.iter():
+            if sub_element.tag.endswith("}element"):
+                number = int(sub_element.attrib["number"])
+                if number != 0:
+                    r_dict[sub_element.attrib["symbol"]] = number
+        return r_dict
+
+    def _parse_in_more_detail_XML(self):
+        data_list = []
+        for xml_path in self.unimod_xml_names:
+            xml_path = Path(xml_path)
+            if os.path.exists(xml_path) is False:
+                logger.warning(f"{xml_path} does not exist")
+                continue
+
+            logger.info("> Parsing mods file ({0})".format(xml_path))
+            unimodXML = ET.iterparse(
+                codecs.open(xml_path, "r", encoding="utf8"),
+                events=(b"start", b"end"),
+            )
+            for event, element in unimodXML:
+                if event == b"start":
+                    if element.tag.endswith("}mod"):
+                        tmp = {
+                            "Name": element.attrib["title"],
+                            "Accession": str(element.attrib["record_id"]),
+                            "Description": element.attrib.get("full_name", ""),
+                            "elements": {},
+                            "specificity": [],
+                            "neutral_losses": [],
+                            "PSI-MS approved": False,
+                        }
+                        if element.attrib.get("approved", "0") == "1":
+                            tmp["PSI-MS approved"] = True
+                            tmp["PSI-MS Name"] = element.attrib["title"]
+                    elif element.tag.endswith("}delta"):
+                        tmp["mono_mass"] = float(element.attrib["mono_mass"])
+                    elif element.tag.endswith("}alt_name"):
+                        tmp["Alt Description"] = element.text
+                    else:
+                        pass
+                else:
+                    # end mod
+
+                    if element.tag.endswith("}delta"):
+                        tmp["elements"] = self._extract_elements(element)
+
+                    elif element.tag.endswith("}specificity"):
+                        amino_acid = element.attrib["site"]
+                        classification = element.attrib["classification"]
+                        if classification == "Artefact":
+                            continue
+
+                        tmp["specificity"].append(f"{amino_acid}<|>{classification}")
+                        if len(element) > 0:
+                            for sub_element in element.iter():
+                                if (
+                                    sub_element.tag.endswith("}NeutralLoss")
+                                    and len(sub_element) > 0
+                                ):
+                                    neutral_loss_elements = self._extract_elements(
+                                        sub_element
+                                    )
+                                    tmp["neutral_losses"].append(
+                                        (amino_acid, neutral_loss_elements)
+                                    )
+
+                    elif element.tag.endswith("}mod"):
+                        data_list.append(tmp)
+                    else:
+                        pass
+        return data_list
 
     def _parseXML(self, xml_file_list=None):
         # is_frozen = getattr(sys, "frozen", False)
@@ -139,7 +290,7 @@ class UnimodMapper(object):
                         else:
                             pass
                     else:
-                        # end element
+                        # end elementy
                         if element.tag.endswith("}delta"):
                             collect_element = False
                         elif element.tag.endswith("}mod"):
@@ -199,6 +350,7 @@ class UnimodMapper(object):
         return mapper
 
     # name 2 ....
+    @deprecated
     def name2mass(self, unimod_name):
         """
         Converts unimod name to unimod mono isotopic mass
@@ -211,6 +363,7 @@ class UnimodMapper(object):
         """
         return self._map_key_2_index_2_value(unimod_name, "mono_mass")
 
+    @deprecated
     def name2composition(self, unimod_name):
         """
         Converts unimod name to unimod composition
@@ -223,6 +376,7 @@ class UnimodMapper(object):
         """
         return self._map_key_2_index_2_value(unimod_name, "element")
 
+    @deprecated
     def name2id(self, unimod_name):
         """
         Converts unimod name to unimod ID
@@ -235,6 +389,7 @@ class UnimodMapper(object):
         """
         return self._map_key_2_index_2_value(unimod_name, "unimodID")
 
+    @deprecated
     def name2specificity_list(self, unimod_name):
         """
         Converts unimod name to list of tuples containing the
@@ -252,7 +407,7 @@ class UnimodMapper(object):
             list_2_return = self._data_list_2_value(index, "specificity")
         return list_2_return
 
-    # unimodid 2 ....
+    @deprecated  # unimodid 2 ....
     def id2mass(self, unimod_id):
         """
         Converts unimod ID to unimod mass
@@ -267,6 +422,7 @@ class UnimodMapper(object):
             unimod_id = str(unimod_id)
         return self._map_key_2_index_2_value(unimod_id, "mono_mass")
 
+    @deprecated
     def id2composition(self, unimod_id):
         """
         Converts unimod ID to unimod composition
@@ -281,6 +437,7 @@ class UnimodMapper(object):
             unimod_id = str(unimod_id)
         return self._map_key_2_index_2_value(unimod_id, "element")
 
+    @deprecated
     def id2name(self, unimod_id):
         """
         Converts unimod ID to unimod name
@@ -295,7 +452,7 @@ class UnimodMapper(object):
             unimod_id = str(unimod_id)
         return self._map_key_2_index_2_value(unimod_id, "unimodname")
 
-    # mass is ambigous therefore a list is returned
+    @deprecated  # mass is ambigous therefore a list is returned
     def mass2name_list(self, mass):
         """
         Converts unimod mass to unimod name list,
@@ -312,6 +469,7 @@ class UnimodMapper(object):
             list_2_return.append(self._data_list_2_value(index, "unimodname"))
         return list_2_return
 
+    @deprecated
     def mass2id_list(self, mass):
         """
         Converts unimod mass to unimod name list,
@@ -330,6 +488,7 @@ class UnimodMapper(object):
                 list_2_return.append(self._data_list_2_value(index, "unimodID"))
         return list_2_return
 
+    @deprecated
     def mass2composition_list(self, mass):
         """
         Converts unimod mass to unimod element composition list,
@@ -347,6 +506,7 @@ class UnimodMapper(object):
             list_2_return.append(self._data_list_2_value(index, "element"))
         return list_2_return
 
+    @deprecated
     def appMass2id_list(self, mass, decimal_places=2):
         """
         Creates a list of unimod IDs for a given approximate mass
@@ -374,6 +534,7 @@ class UnimodMapper(object):
         )
         return return_list
 
+    @deprecated
     def appMass2element_list(self, mass, decimal_places=2):
         """
         Creates a list of element composition dicts for a given approximate mass
@@ -404,6 +565,7 @@ class UnimodMapper(object):
         )
         return return_list
 
+    @deprecated
     def appMass2name_list(self, mass, decimal_places=2):
         """
         Creates a list of unimod names for a given approximate mass
@@ -431,6 +593,7 @@ class UnimodMapper(object):
         )
         return return_list
 
+    @deprecated
     def composition2name_list(self, composition):
         """
         Converts unimod composition to unimod name list,
@@ -449,6 +612,7 @@ class UnimodMapper(object):
                 list_2_return.append(self._data_list_2_value(index, "unimodname"))
         return list_2_return
 
+    @deprecated
     def composition2id_list(self, composition):
         """
         Converts unimod composition to unimod name list,
@@ -467,6 +631,7 @@ class UnimodMapper(object):
                 list_2_return.append(self._data_list_2_value(index, "unimodID"))
         return list_2_return
 
+    @deprecated
     def composition2mass(self, composition):
         """
         Converts unimod composition to unimod monoisotopic mass.
@@ -494,6 +659,7 @@ class UnimodMapper(object):
             mass_2_return = list_2_return[0]
         return mass_2_return
 
+    @deprecated
     def _appMass2whatever(self, mass, decimal_places=2, entry_key=None):
         return_list = []
         for entry in self.data_list:
@@ -503,6 +669,7 @@ class UnimodMapper(object):
                 return_list.append(entry[entry_key])
         return return_list
 
+    @deprecated
     def _map_key_2_index_2_value(self, map_key, return_key):
         index = self.mapper.get(map_key, None)
         if index is None:
@@ -515,6 +682,7 @@ class UnimodMapper(object):
             return_value = self._data_list_2_value(index, return_key)
         return return_value
 
+    @deprecated
     def _data_list_2_value(self, index, return_key):
         return self.data_list[index][return_key]
 
@@ -586,3 +754,5 @@ class UnimodMapper(object):
 if __name__ == "__main__":
     print(__doc__)
     print(UnimodMapper.__doc__)
+    U = UnimodMapper()
+    U.query()
