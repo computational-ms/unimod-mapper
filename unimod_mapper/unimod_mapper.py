@@ -49,9 +49,9 @@ class UnimodMapper(object):
 
     def deprecated(function):
         def wrapper_deprecation_warning(*args, **kwargs):
-            logger.warning(
-                f"{function.__name__} is deprecated, please use generic map function"
-            )
+            old_fn_name = function.__name__
+            new_fn_name = function.__name__.replace("2", "_to_")
+            logger.warning(f"{old_fn_name} is deprecated, please use {new_fn_name}")
             return function(*args, **kwargs)
 
         return wrapper_deprecation_warning

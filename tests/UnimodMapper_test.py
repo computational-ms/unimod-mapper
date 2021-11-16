@@ -2,6 +2,7 @@
 # encoding: utf-8
 import os
 import sys
+from pathlib import Path
 
 import pytest
 
@@ -160,14 +161,18 @@ class TestXMLIntegrity:
         #         self.assertEqual(system_exit_check.exception.code, 1)
 
     def test_write(self):
-        xml_file = os.path.join(os.path.dirname(__file__), "test_only_unimod.xml")
-        assert os.path.exists(xml_file) is False
+        xml_file = Path(__file__).parent / "test_only_unimod.xml"
+        if xml_file.exists() is True:
+            xml_file.unlink()
+
         mod_dict = {
             "mass": 1337.42,
             "name": "GnomeChompski",
             "composition": {"L": 4, "D": 2},
         }
         M.writeXML(mod_dict, xml_file=xml_file)
-        assert os.path.exists(xml_file)
-        assert M.mass2name_list(1337.42) == ["GnomeChompski"]
-        os.remove(xml_file)
+        assert xml_file.exists() is True
+        converted = M.mass2name_list(1337.42)
+        print(converted)
+        assert "GnomeChompski" in converted
+        xml_file.unlink()
