@@ -113,25 +113,33 @@ class UnimodMapper(object):
             self._df = pd.DataFrame(self._parse_in_more_detail_XML())
             self._df = self._df.explode("specificity").reset_index(drop=True)
             sites = self._df.specificity.str.split("<\|>", expand=True)
-            sites.columns = ["Site", "Position"]
+            sites.columns = [
+                "Site",
+                "Classification",
+                "neutral_loss_elements",
+                "neutral_losses",
+            ]
             self._df.drop(columns=["specificity"], inplace=True)
             self._df = self._df.join(sites)
-            self._df.drop_duplicates(
-                subset=[
-                    "Name",
-                    # "Accession",
-                    "Description",
-                    # "elements",
-                    # "neutral_losses",
-                    "PSI-MS approved",
-                    "PSI-MS Name",
-                    "mono_mass",
-                    "Alt Description",
-                    "Site",
-                    "Position",
-                ],
-                inplace=True,
-            )
+            self._df = self._df.convert_dtypes()
+            # self._df.neutral_losses.replace("0", np.nan, inplace=True)
+            self._df.neutral_losses = self._df.neutral_losses.astype(float)
+            # self._df.drop_duplicates(
+            #     subset=[
+            #         "Name",
+            #         # "Accession",
+            #         "Description",
+            #         # "elements",
+            #         # "neutral_losses",
+            #         "PSI-MS approved",
+            #         "PSI-MS Name",
+            #         "mono_mass",
+            #         "Alt Description",
+            #         "Site",
+            #         "Position",
+            #     ],
+            #     inplace=True,
+            # )
         return self._df
 
     def query(self, query_string):
@@ -145,18 +153,9 @@ class UnimodMapper(object):
 
     def name_to_neutral_loss(self, name):
         return (
-            self.df.query("`Name` == @name")
-            .drop_duplicates(
-                subset=[
-                    "Name",
-                    "Description",
-                    "PSI-MS approved",
-                    "PSI-MS Name",
-                    "mono_mass",
-                    "Alt Description",
-                ]
-            )["neutral_losses"]
-            .to_list()
+            self.df.query("`Name` == @name")[["Site", "neutral_losses"]]
+            .to_numpy()
+            .tolist()
         )
 
     def name_to_id(self, name):
@@ -244,7 +243,7 @@ class UnimodMapper(object):
                 logger.warning(f"{xml_path} does not exist")
                 continue
 
-            logger.info("> Parsing mods file ({0})".format(xml_path))
+            logger.info("Parsing mod xml file ({0})".format(xml_path))
             unimodXML = ET.iterparse(
                 codecs.open(xml_path, "r", encoding="utf8"),
                 events=(b"start", b"end"),
@@ -258,8 +257,8 @@ class UnimodMapper(object):
                             "Description": element.attrib.get("full_name", ""),
                             "elements": {},
                             "specificity": [],
-                            "neutral_losses": [],
-                            "neutral_losses_element": [],
+                            # "neutral_losses": [],
+                            # "neutral_losses_element": [],
                             "PSI-MS approved": False,
                         }
                         if element.attrib.get("approved", "0") == "1":
@@ -283,7 +282,8 @@ class UnimodMapper(object):
                         if classification == "Artefact":
                             continue
 
-                        tmp["specificity"].append(f"{amino_acid}<|>{classification}")
+                        neutral_loss_elements = {}
+                        neutral_loss_mass = 0
                         if len(element) > 0:
                             for sub_element in element.iter():
                                 if (
@@ -294,15 +294,21 @@ class UnimodMapper(object):
                                     neutral_loss_elements = self._extract_elements(
                                         sub_element
                                     )
-                                    tmp["neutral_losses_element"].append(
-                                        (amino_acid, neutral_loss_elements)
+                                    # tmp["neutral_losses_element"].append(
+                                    #     (amino_acid, neutral_loss_elements)
+                                    # )
+                                    neutral_loss_mass = float(
+                                        sub_element.attrib["mono_mass"]
                                     )
-                                    tmp["neutral_losses"].append(
-                                        (
-                                            amino_acid,
-                                            float(sub_element.attrib["mono_mass"]),
-                                        )
-                                    )
+                                    # tmp["neutral_losses"].append(
+                                    #     (
+                                    #         amino_acid,
+                                    #         neutral_loss_mass,
+                                    #     )
+                                    # )
+                        tmp["specificity"].append(
+                            f"{amino_acid}<|>{classification}<|>{neutral_loss_elements}<|>{neutral_loss_mass}"
+                        )
 
                     elif element.tag.endswith("}mod"):
                         data_list.append(tmp)
@@ -1163,8 +1169,8 @@ class UnimodMapper(object):
 
             neutral_loss = []
             if mod_dict["neutral_loss"] == "unimod":
-                # breakpoint()
-                for nl_item in self.name_to_neutral_loss(unimod_name)[0]:
+
+                for nl_item in self.name_to_neutral_loss(unimod_name):
                     if nl_item[0] == mod_dict["aa"]:
                         neutral_loss.append(nl_item[1])
             else:

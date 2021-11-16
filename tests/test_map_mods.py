@@ -1,4 +1,5 @@
 from unimod_mapper import UnimodMapper
+import numpy as np
 
 mod_dict = {
     "ufiles": "",
@@ -284,7 +285,7 @@ unimod_dict_with_nl = {
             "mass": 57.021464,
             "composition": {"H": 3, "C": 2, "N": 1, "O": 1},
             "id": "4",
-            "neutral_loss": [],
+            "neutral_loss": 0.0,
             "_id": 1,
             "org": {
                 "aa": "C",
