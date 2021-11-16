@@ -234,14 +234,18 @@ CONVERSIONS = [
         "cases": [
             {
                 "in": {"args": ["Ala->Gln"]},
-                "out": [[("A", "AA substitution")], [("A", "AA substitution")]],
+                "out": [
+                    [("A", "AA substitution")],
+                    [("A", "AA substitution")],
+                    [("A", "AA substitution")],
+                ],
             }
         ],  #
     },
     {
         "function": M.composition2id_list,
         "cases": [
-            {"in": {"args": ["C(22)H(30)2H(8)N(4)O(6)S(1)"]}, "out": ["9", "9"]}
+            {"in": {"args": ["C(22)H(30)2H(8)N(4)O(6)S(1)"]}, "out": ["9", "9", "9"]}
         ],  #
     },
     {
@@ -306,6 +310,7 @@ class TestXMLIntegrity:
     @pytest.mark.parametrize("conversion", CONVERSIONS)
     def test_conversion(self, conversion):
         for case in conversion["cases"]:
+            print(case)
             assert case["out"] == conversion["function"](
                 *case["in"].get("args", []), **case["in"].get("kwargs", {})
             )
@@ -334,7 +339,6 @@ class TestXMLIntegrity:
         assert "GnomeChompski" in converted
         xml_file.unlink()
 
-
     def test_read_usermod_file_exclude_defaults(self):
         # the order of the files shouldn't change the unimodIDs
         for data in MULTIFILE_TESTS:
@@ -344,16 +348,16 @@ class TestXMLIntegrity:
             assert len(um.data_list) == data["entries"]
             for case in data["excluded"]:
                 assert case["out"] == um.name2id_list(case["in"])
+    ^--- why exclude defaults?
 
     def test_read_multiple_unimod_files(self):
         # the order of the files shouldn't change the unimodIDs
         for data in MULTIFILE_TESTS:
             um = unimod_mapper.UnimodMapper(xml_file_list=data["order"])
             for case in data["included"]:
-                assert case["out"] == um.name2id_list(case["in"])
+                assert sorted(case["out"]) == sorted(um.name2id_list(case["in"]))
 
     def test_unimod_files_is_none(self):
         um = unimod_mapper.UnimodMapper(xml_file_list=None)
         names = [x.name for x in um.unimod_xml_names]
-        assert names == ["usermod.xml", "unimod.xml"]
-
+        assert sorted(names) == sorted(["usermod.xml", "unimod.xml"])
