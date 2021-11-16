@@ -348,7 +348,6 @@ class TestXMLIntegrity:
             assert len(um.data_list) == data["entries"]
             for case in data["excluded"]:
                 assert case["out"] == um.name2id_list(case["in"])
-    ^--- why exclude defaults?
 
     def test_read_multiple_unimod_files(self):
         # the order of the files shouldn't change the unimodIDs
