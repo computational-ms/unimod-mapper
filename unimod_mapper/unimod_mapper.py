@@ -178,11 +178,9 @@ class UnimodMapper(object):
 
     def mass_to_ids(self, mass, decimals=0):
         lower_mass, upper_mass = self._determine_mass_range(mass, decimals=decimals)
-        return (
-            self.df.query("@lower_mass <= `mono_mass` <= @upper_mass")["Accession"]
-            .unique()
-            .tolist()
-        )
+        return self.df.query("@lower_mass <= `mono_mass` <= @upper_mass")[
+            "Accession"
+        ].unique()
 
     def mass_to_compositions(self, mass, decimals=0):
         lower_mass, upper_mass = self._determine_mass_range(mass, decimals=decimals)
@@ -192,11 +190,9 @@ class UnimodMapper(object):
 
     def mass_to_names(self, mass, decimals=0):
         lower_mass, upper_mass = self._determine_mass_range(mass, decimals=decimals)
-        return (
-            self.df.query("@lower_mass <= `mono_mass` <= @upper_mass")["Name"]
-            .unique()
-            .tolist()
-        )
+        return self.df.query("@lower_mass <= `mono_mass` <= @upper_mass")[
+            "Name"
+        ].unique()
 
     def mass_to_combos(self, mass, n=2, decimals=3):
         if n not in self._combos.keys():
