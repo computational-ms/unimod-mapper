@@ -3,7 +3,6 @@
 import os
 import sys
 from pathlib import Path
-
 import pytest
 
 # this block is not needed anymore, when we have a proper package
@@ -234,18 +233,14 @@ CONVERSIONS = [
         "cases": [
             {
                 "in": {"args": ["Ala->Gln"]},
-                "out": [
-                    [("A", "AA substitution")],
-                    [("A", "AA substitution")],
-                    [("A", "AA substitution")],
-                ],
+                "out": [[("A", "AA substitution")], [("A", "AA substitution")]],
             }
         ],  #
     },
     {
         "function": M.composition2id_list,
         "cases": [
-            {"in": {"args": ["C(22)H(30)2H(8)N(4)O(6)S(1)"]}, "out": ["9", "9", "9"]}
+            {"in": {"args": ["C(22)H(30)2H(8)N(4)O(6)S(1)"]}, "out": ["9", "9"]}
         ],  #
     },
     {
@@ -310,7 +305,6 @@ class TestXMLIntegrity:
     @pytest.mark.parametrize("conversion", CONVERSIONS)
     def test_conversion(self, conversion):
         for case in conversion["cases"]:
-            print(case)
             assert case["out"] == conversion["function"](
                 *case["in"].get("args", []), **case["in"].get("kwargs", {})
             )
@@ -321,22 +315,16 @@ class TestXMLIntegrity:
         #         self.assertEqual(system_exit_check.exception.code, 1)
 
     def test_write(self):
-
-        xml_file = Path(__file__).parent / "test_only_unimod.xml"
-        if xml_file.exists() is True:
-            xml_file.unlink()
-
+        xml_file = test_dir.joinpath("test_only_unimod.xml")
+        assert xml_file.exists() is False
         mod_dict = {
             "mass": 1337.42,
             "name": "GnomeChompski",
             "composition": {"L": 4, "D": 2},
         }
         M.writeXML(mod_dict, xml_file=xml_file)
-
-        assert xml_file.exists() is True
-        converted = M.mass2name_list(1337.42)
-        print(converted)
-        assert "GnomeChompski" in converted
+        assert os.path.exists(xml_file)
+        assert M.mass2name_list(1337.42) == ["GnomeChompski"]
         xml_file.unlink()
 
     def test_read_usermod_file_exclude_defaults(self):
@@ -354,9 +342,9 @@ class TestXMLIntegrity:
         for data in MULTIFILE_TESTS:
             um = unimod_mapper.UnimodMapper(xml_file_list=data["order"])
             for case in data["included"]:
-                assert sorted(case["out"]) == sorted(um.name2id_list(case["in"]))
+                assert case["out"] == um.name2id_list(case["in"])
 
     def test_unimod_files_is_none(self):
         um = unimod_mapper.UnimodMapper(xml_file_list=None)
         names = [x.name for x in um.unimod_xml_names]
-        assert sorted(names) == sorted(["usermod.xml", "unimod.xml"])
+        assert names == ["usermod.xml", "unimod.xml"]

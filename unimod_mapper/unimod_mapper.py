@@ -28,10 +28,6 @@ import numpy as np
 import itertools
 import pandas as pd
 
-pd.set_option("max_columns", 100)
-
-import copy
-
 
 from pathlib import Path
 from loguru import logger
@@ -57,7 +53,7 @@ class UnimodMapper(object):
     def deprecated(function):
         def wrapper_deprecation_warning(*args, **kwargs):
             old_fn_name = function.__name__
-            new_fn_name = function.__name__.replace("2", "_to_")
+            new_fn_name = function.__name__.replace("2", "_to_").replace("_list", "")
             logger.warning(f"{old_fn_name} is deprecated, please use {new_fn_name}")
             return function(*args, **kwargs)
 
@@ -66,18 +62,15 @@ class UnimodMapper(object):
     def __init__(self, refresh_xml=False, xml_file_list=None, add_default_files=True):
         if xml_file_list is None:
             xml_file_list = []
-
         self._data_list = None
         self._mapper = None
         self._df = None
         self._elements = []
         self._combos = {}
+
         # Check if unimod.xml file exists & if not reset refresh_xml flag
-
-        package_dir = Path(__file__).parent.resolve()
-        full_path = package_dir / "unimod.xml"
-        if os.path.exists(full_path) is False:
-
+        full_path = Path(__file__).parent / "unimod.xml"
+        if full_path.exists() is False:
             refresh_xml = True
 
         if refresh_xml is True:
@@ -85,12 +78,12 @@ class UnimodMapper(object):
             with open(full_path, "wb") as file:
                 file.write(response.content)
 
-        self.unimod_xml_names = [
-            package_dir / "unimod.xml",
-            package_dir / "usermod.xml",
-        ]
-        if xml_file_list is not None:
-            self.unimod_xml_names.extend(xml_file_list)
+        self.unimod_xml_names = xml_file_list.copy()
+        if add_default_files is True:
+            names = [x.name for x in xml_file_list]
+            for xml in ["usermod.xml", "unimod.xml"]:
+                if xml not in names:
+                    self.unimod_xml_names.append(Path(__file__).parent.joinpath(xml))
 
     @property
     def data_list(self):
@@ -334,7 +327,7 @@ class UnimodMapper(object):
                         # # else:
                         #     pass
                     else:
-                        # end elementy
+                        # end element
                         if element.tag.endswith("}delta"):
                             collect_element = False
                         elif element.tag.endswith("}mod"):
@@ -392,10 +385,8 @@ class UnimodMapper(object):
         return mapper
 
     # name 2 ....
-
     @deprecated
     def name2mass_list(self, unimod_name):
-
         """
         Converts unimod name to all matching unimod mono isotopic masses
 
@@ -412,6 +403,7 @@ class UnimodMapper(object):
                 list_2_return.append(self._data_list_2_value(index, "mono_mass"))
         return list_2_return
 
+    @deprecated
     def name2first_mass(self, unimod_name):
         """
         Converts unimod name to unimod mono isotopic mass returning the first instance
@@ -432,7 +424,6 @@ class UnimodMapper(object):
 
     @deprecated
     def name2composition_list(self, unimod_name):
-
         """
         Converts unimod name to all matching unimod compositions
 
@@ -453,8 +444,10 @@ class UnimodMapper(object):
     def name2first_composition(self, unimod_name):
         """
         Converts unimod name to unimod composition returning the first instance only
+
         Args:
             unimod_name (str): name of modification (as named in unimod)
+
         Returns:
             list: list of tuples (specificity sites, classification)Unimod mono isotopic mass
         """
@@ -467,25 +460,6 @@ class UnimodMapper(object):
         return rval
 
     @deprecated
-    def name2id(self, unimod_name):
-
-        """
-        Converts unimod name to unimod composition returning the first instance only
-
-        Args:
-            unimod_name (str): name of modification (as named in unimod)
-
-        Returns:
-            list: list of tuples (specificity sites, classification)Unimod mono isotopic mass
-        """
-        index_list = self.mapper.get(unimod_name, None)
-        if index_list is not None:
-            index = min(index_list)
-            rval = self._data_list_2_value(index, "element")
-        else:
-            rval = None
-        return rval
-
     def name2id_list(self, unimod_name):
         """
         Converts unimod name to unimod id
@@ -503,6 +477,7 @@ class UnimodMapper(object):
                 list_2_return.append(self._data_list_2_value(index, "unimodID"))
         return list_2_return
 
+    @deprecated
     def name2first_id(self, unimod_name):
         """
         Converts unimod name to unimod ID returning the first instance
@@ -521,6 +496,7 @@ class UnimodMapper(object):
             rval = None
         return rval
 
+    @deprecated
     def name2neutral_loss_list(self, unimod_name):
         """
         Converts unimod name to neutral_loss
@@ -558,9 +534,9 @@ class UnimodMapper(object):
 
         return list_2_return
 
-    @deprecated  # unimodid 2 ....
+    # unimodid 2 ....
+    @deprecated
     def id2mass_list(self, unimod_id):
-
         """
         Converts unimod ID to unimod mass
 
@@ -602,7 +578,6 @@ class UnimodMapper(object):
 
     @deprecated
     def id2composition_list(self, unimod_id):
-
         """
         Converts unimod ID to unimod composition
 
@@ -621,6 +596,7 @@ class UnimodMapper(object):
                 list_2_return.append(self._data_list_2_value(index, "element"))
         return list_2_return
 
+    @deprecated
     def id2first_composition(self, unimod_id):
         """
         Converts unimod ID to composition returning the first instance
@@ -643,7 +619,6 @@ class UnimodMapper(object):
 
     @deprecated
     def id2name_list(self, unimod_id):
-
         """
         Converts unimod ID to unimod name
 
@@ -662,6 +637,7 @@ class UnimodMapper(object):
                 list_2_return.append(self._data_list_2_value(index, "unimodname"))
         return list_2_return
 
+    @deprecated
     def id2first_name(self, unimod_id):
         """
         Converts unimod ID to composition returning the first instance
@@ -682,6 +658,7 @@ class UnimodMapper(object):
             rval = None
         return rval
 
+    @deprecated
     def id2neutral_loss_list(self, unimod_id):
         """
         Converts unimod name to neutral_loss
@@ -701,7 +678,8 @@ class UnimodMapper(object):
                 list_2_return.append(self._data_list_2_value(index, "neutral_loss"))
         return list_2_return
 
-    @deprecated  # mass is ambigous therefore a list is returned
+    # mass is ambigous therefore a list is returned
+    @deprecated
     def mass2name_list(self, mass):
         """
         Converts unimod mass to unimod name list,
@@ -933,7 +911,6 @@ class UnimodMapper(object):
             return_value = self._data_list_2_value(index[0], return_key)
         return return_value
 
-    @deprecated
     def _data_list_2_value(self, index, return_key):
         return self.data_list[index][return_key]
 
@@ -1210,5 +1187,3 @@ class UnimodMapper(object):
 if __name__ == "__main__":
     print(__doc__)
     print(UnimodMapper.__doc__)
-    U = UnimodMapper()
-    U.query()
