@@ -82,10 +82,10 @@ CONVERSIONS = [
     #     ],
     # },
     {
-        "function": M.appMass2name_list,
+        "function": M.mass_to_names,
         "cases": [
             {
-                "in": {"args": [18], "kwargs": {"decimal_places": 1}},
+                "in": {"args": [18], "kwargs": {"decimals": 1}},
                 "out": [
                     "Fluoro",
                     "Methyl:2H(3)13C(1)",
@@ -103,6 +103,7 @@ CONVERSIONS = [
 @pytest.mark.parametrize("conversion", CONVERSIONS)
 def test_conversion_using_query(conversion):
     for case in conversion["cases"]:
+        print(case)
         converted = conversion["function"](
             *case["in"].get("args", []), **case["in"].get("kwargs", {})
         )

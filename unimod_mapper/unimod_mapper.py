@@ -22,6 +22,9 @@ import codecs
 import xml.etree.ElementTree as ET
 import xml.dom.minidom as xmldom
 import requests
+import bisect
+import numpy as np
+import itertools
 import pandas as pd
 
 pd.set_option("max_columns", 100)
@@ -61,6 +64,7 @@ class UnimodMapper(object):
         self._mapper = None
         self._df = None
         self._elements = []
+        self._combos = {}
         # Check if unimod.xml file exists & if not reset refresh_xml flag
         package_dir = Path(__file__).parent.resolve()
         full_path = package_dir / "unimod.xml"
@@ -113,6 +117,7 @@ class UnimodMapper(object):
             sites.columns = ["Site", "Position"]
             self._df.drop(columns=["specificity"], inplace=True)
             self._df = self._df.join(sites)
+            # self._df.drop_duplicates(inplace=True)
         return self._df
 
     def query(self, query_string):
@@ -136,15 +141,14 @@ class UnimodMapper(object):
     def id_to_name(self, id):
         return self.df.query("`Accession` == @id")["Name"].to_list()
 
-    def _determin_mass_range(self, mass, decimals=0):
+    def _determine_mass_range(self, mass, decimals=0):
         fraction = 1 / 10 ** (decimals + 1)
         lower_mass = mass - 5 * fraction
         upper_mass = mass + 4 * fraction
         return lower_mass, upper_mass
 
     def mass_to_ids(self, mass, decimals=0):
-        """This is a many to many relation ship hence unique() ids are reported"""
-        lower_mass, upper_mass = self._determin_mass_range(mass, decimals=decimals)
+        lower_mass, upper_mass = self._determine_mass_range(mass, decimals=decimals)
         return (
             self.df.query("@lower_mass <= `mono_mass` <= @upper_mass")["Accession"]
             .unique()
@@ -152,19 +156,46 @@ class UnimodMapper(object):
         )
 
     def mass_to_compositions(self, mass, decimals=0):
-        """This is a many to many relation ship hence unique() ids are reported"""
-        lower_mass, upper_mass = self._determin_mass_range(mass, decimals=decimals)
+        lower_mass, upper_mass = self._determine_mass_range(mass, decimals=decimals)
         return self.df.query("@lower_mass <= `mono_mass` <= @upper_mass")[
             "elements"
         ].tolist()
 
     def mass_to_names(self, mass, decimals=0):
-        lower_mass, upper_mass = self._determin_mass_range(mass, decimals=decimals)
+        lower_mass, upper_mass = self._determine_mass_range(mass, decimals=decimals)
         return (
             self.df.query("@lower_mass <= `mono_mass` <= @upper_mass")["Name"]
             .unique()
             .tolist()
         )
+
+    def mass_to_combos(self, mass, n=2, decimals=3):
+        if n not in self._combos.keys():
+            self._combos[n] = self._generate_mass_combos(n=n)
+
+        lower_mass, upper_mass = self._determine_mass_range(mass, decimals=decimals)
+
+        lower_index = bisect.bisect_left(
+            [x[0] for x in self._combos[n]],
+            lower_mass,
+        )
+
+        upper_index = bisect.bisect_right(
+            [x[0] for x in self._combos[n]],
+            upper_mass,
+        )
+        return self._combos[n][lower_index:upper_index]
+
+    def _generate_mass_combos(self, n=2):
+        mass_list = []
+        for combo in itertools.combinations_with_replacement(
+            self.df[["mono_mass", "Name"]].to_numpy(), 2
+        ):
+
+            combo_mass = np.sum(np.fromiter((c[0] for c in combo), float))
+            combo_name = [c[1] for c in combo]
+            mass_list.append((combo_mass, combo_name))
+        return sorted(mass_list)
 
     def _extract_elements(self, element):
         r_dict = {}
