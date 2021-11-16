@@ -21,14 +21,12 @@ setup(
     package_data={
         "unimod_mapper": [
             "version.txt",
-            "unimod.xml",
         ]
     },
     python_requires=">=3.7.0",
-    build_requires=[],
     install_requires=requirements,
     long_description="Unimod Mapper for Proteomics Tools",
-    author="Christian Fufezan, Manuel Köster, Johannes Leufken, Stefan Schulze",
+    author="Christian Fufezan, Manuel Kösters, Johannes Leufken, Stefan Schulze",
     author_email="ursgal.team@gmail.com",
     url="https://github.com/computational-ms/unimod-mapper",
     license="MIT",

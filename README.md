@@ -15,6 +15,9 @@ Contributors
 
 * J. Leufken
 * S. Schulze
-* M. Koesters
+* M. Kösters
+* G. Sweetman
+* A. Vlasov
 * C. Fufezan
+
 
