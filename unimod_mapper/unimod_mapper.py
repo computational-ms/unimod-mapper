@@ -116,7 +116,22 @@ class UnimodMapper(object):
             sites.columns = ["Site", "Position"]
             self._df.drop(columns=["specificity"], inplace=True)
             self._df = self._df.join(sites)
-            # self._df.drop_duplicates(inplace=True)
+            self._df.drop_duplicates(
+                subset=[
+                    "Name",
+                    # "Accession",
+                    "Description",
+                    # "elements",
+                    # "neutral_losses",
+                    "PSI-MS approved",
+                    "PSI-MS Name",
+                    "mono_mass",
+                    "Alt Description",
+                    "Site",
+                    "Position",
+                ],
+                inplace=True,
+            )
         return self._df
 
     def query(self, query_string):
@@ -127,6 +142,22 @@ class UnimodMapper(object):
 
     def name_to_composition(self, name):
         return self.df.query("`Name` == @name")["elements"].to_list()
+
+    def name_to_neutral_loss(self, name):
+        return (
+            self.df.query("`Name` == @name")
+            .drop_duplicates(
+                subset=[
+                    "Name",
+                    "Description",
+                    "PSI-MS approved",
+                    "PSI-MS Name",
+                    "mono_mass",
+                    "Alt Description",
+                ]
+            )["neutral_losses"]
+            .to_list()
+        )
 
     def name_to_id(self, name):
         return self.df.query("`Name` == @name")["Accession"].to_list()
@@ -228,6 +259,7 @@ class UnimodMapper(object):
                             "elements": {},
                             "specificity": [],
                             "neutral_losses": [],
+                            "neutral_losses_element": [],
                             "PSI-MS approved": False,
                         }
                         if element.attrib.get("approved", "0") == "1":
@@ -258,11 +290,18 @@ class UnimodMapper(object):
                                     sub_element.tag.endswith("}NeutralLoss")
                                     and len(sub_element) > 0
                                 ):
+
                                     neutral_loss_elements = self._extract_elements(
                                         sub_element
                                     )
-                                    tmp["neutral_losses"].append(
+                                    tmp["neutral_losses_element"].append(
                                         (amino_acid, neutral_loss_elements)
+                                    )
+                                    tmp["neutral_losses"].append(
+                                        (
+                                            amino_acid,
+                                            float(sub_element.attrib["mono_mass"]),
+                                        )
                                     )
 
                     elif element.tag.endswith("}mod"):
@@ -1062,9 +1101,9 @@ class UnimodMapper(object):
             if mod_dict["composition"] is None:
                 if mod_dict["name"] is not None:
                     unimod_name = mod_dict["name"]
-                    unimod_id = self.name2id_list(unimod_name)
-                    mass = self.name2mass_list(unimod_name)
-                    composition = self.name2composition_list(unimod_name)
+                    unimod_id = self.name_to_id(unimod_name)
+                    mass = self.name_to_mass(unimod_name)
+                    composition = self.name_to_composition(unimod_name)
                     if unimod_id == []:
                         logger.warning(
                             "'{1}' is not a Unimod modification please change it to a valid PSI-MS Unimod Name or Unimod Accession # or add the chemical composition as hill notation to the mod_dict, e.g: 'composition': 'H-1N1O2'. Continue without modification {0} ".format(
@@ -1075,9 +1114,9 @@ class UnimodMapper(object):
                     unimod = True
                 elif mod_dict["id"] is not None:
                     unimod_id = mod_dict["id"]
-                    unimod_name = self.id2name_list(unimod_id)
-                    mass = self.id2mass_list(unimod_id)
-                    composition = self.id2composition_list(unimod_id)
+                    unimod_name = self.id_to_name(unimod_id)
+                    mass = self.id_to_mass(unimod_id)
+                    composition = self.id_to_composition(unimod_id)
                     if unimod_name == []:
                         logger.warning(
                             "'{1}' is not a Unimod modification please change it to a valid Unimod Accession # or PSI-MS Unimod Name or add the chemical composition as hill notation to the mod_dict, e.g: 'composition': 'H-1N1O2'. Continue without modification {0} ".format(
@@ -1099,9 +1138,9 @@ class UnimodMapper(object):
                 chemical_composition.use(formula=chemical_formula)
                 composition = chemical_composition
                 composition_unimod_style = chemical_composition.hill_notation_unimod()
-                unimod_name_list = self.composition2name_list(composition_unimod_style)
-                unimod_id_list = self.composition2id_list(composition_unimod_style)
-                mass = self.composition2mass(composition_unimod_style)
+                unimod_name_list = self.composition_to_name(composition_unimod_style)
+                unimod_id_list = self.composition_to_id(composition_unimod_style)
+                mass = self.composition_to_mass(composition_unimod_style)
                 for i, name in enumerate(unimod_name_list):
                     if name == unimod_name:
                         unimod_id = unimod_id_list[i]
@@ -1124,7 +1163,8 @@ class UnimodMapper(object):
 
             neutral_loss = []
             if mod_dict["neutral_loss"] == "unimod":
-                for nl_item in self.name2neutral_loss_list(unimod_name)[0]:
+                # breakpoint()
+                for nl_item in self.name_to_neutral_loss(unimod_name)[0]:
                     if nl_item[0] == mod_dict["aa"]:
                         neutral_loss.append(nl_item[1])
             else:
