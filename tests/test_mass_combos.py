@@ -68,7 +68,7 @@ def test_mass_to_combos_1_decimal():
         ]
     )
     combo_list = um.mass_to_combos(1, decimals=1)
-    assert len(combo_list) == 4
+    assert len(combo_list) == 3
     # a = [
     #     (0.98, ["0.34", "0.64"]),
     #     (1.01, ["0.34", "0.67"]),
