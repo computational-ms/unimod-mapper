@@ -215,7 +215,7 @@ class UnimodMapper(object):
     def _generate_mass_combos(self, n=2):
         mass_list = []
         for combo in itertools.combinations_with_replacement(
-            self.df[["mono_mass", "Name"]].to_numpy(), 2
+            self.df[["mono_mass", "Name"]].drop_duplicates().to_numpy(), 2
         ):
 
             combo_mass = np.sum(np.fromiter((c[0] for c in combo), float))
