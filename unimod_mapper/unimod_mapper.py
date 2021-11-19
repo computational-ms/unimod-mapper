@@ -60,6 +60,13 @@ class UnimodMapper(object):
         return wrapper_deprecation_warning
 
     def __init__(self, refresh_xml=False, xml_file_list=None, add_default_files=True):
+        """Initialize mapper.
+
+        Args:
+            refresh_xml (bool, optional): Force fresh download of unimod.xml
+            xml_file_list (None, optional): list of user unimod xml files
+            add_default_files (bool, optional): Add default unimod files
+        """
         if xml_file_list is None:
             xml_file_list = []
         self._data_list = None
@@ -87,28 +94,41 @@ class UnimodMapper(object):
 
     @property
     def data_list(self):
+        """Get list of unimods."""
         if self._data_list is None:
             self._data_list = self._parseXML(xml_file_list=self.unimod_xml_names)
         return self._data_list
 
     @data_list.setter
     def data_list(self, data_list):
+        """Set list of unimods."""
         self._data_list = data_list
         return
 
     @property
     def mapper(self):
+        """Get mapping dict."""
         if self._mapper is None:
             self._mapper = self._initialize_mapper()
         return self._mapper
 
     @mapper.setter
     def mapper(self, mapper):
+        """Set mapping dict.
+
+        Args:
+            mapper (dict): new mapping
+        """
         self._mapper = mapper
         return
 
     @property
     def df(self):
+        """Return unimod df.
+
+        Returns:
+            pd.DataFrame: unimod table
+        """
         if self._df is None:
             self._df = pd.DataFrame(self._parse_in_more_detail_XML())
             self._df = self._df.explode("specificity").reset_index(drop=True)
@@ -123,36 +143,51 @@ class UnimodMapper(object):
             self._df = self._df.join(sites)
             self._df.neutral_losses.fillna(0, inplace=True)
             self._df = self._df.convert_dtypes()
-            # self._df.neutral_losses.replace("0", np.nan, inplace=True)
             self._df.neutral_losses = self._df.neutral_losses.astype(float)
-            # self._df.drop_duplicates(
-            #     subset=[
-            #         "Name",
-            #         # "Accession",
-            #         "Description",
-            #         # "elements",
-            #         # "neutral_losses",
-            #         "PSI-MS approved",
-            #         "PSI-MS Name",
-            #         "mono_mass",
-            #         "Alt Description",
-            #         "Site",
-            #         "Position",
-            #     ],
-            #     inplace=True,
-            # )
         return self._df
 
     def query(self, query_string):
+        """Query the dataframe with a pandas style query
+
+        Args:
+            query_string (str): Description
+
+        Returns:
+            pd.DataFrame: filtered DataFrame
+        """
         return self.df.query(query_string)
 
     def name_to_mass(self, name):
+        """Get mass for a given name
+
+        Args:
+            name (str): name of the unimod
+
+        Returns:
+            list: list of masses
+        """
         return self.df.query("`Name` == @name")["mono_mass"].to_list()
 
     def name_to_composition(self, name):
+        """Get composition for a given name
+
+        Args:
+            name (str): name of the unimod
+
+        Returns:
+            list: list of compositions
+        """
         return self.df.query("`Name` == @name")["elements"].to_list()
 
     def name_to_neutral_loss(self, name):
+        """Get neutral loss for a given name
+
+        Args:
+            name (str): name of the unimod
+
+        Returns:
+            list: list of neutral losses
+        """
         return (
             self.df.query("`Name` == @name")[["Site", "neutral_losses"]]
             .to_numpy()
@@ -160,15 +195,47 @@ class UnimodMapper(object):
         )
 
     def name_to_id(self, name):
+        """Get unimod ids for a given name
+
+        Args:
+            name (str): name of the unimod
+
+        Returns:
+            list: list of unimod ids
+        """
         return self.df.query("`Name` == @name")["Accession"].to_list()
 
     def id_to_mass(self, id):
+        """Get mass for a given id
+
+        Args:
+            name (str): id of the unimod
+
+        Returns:
+            list: list of masses
+        """
         return self.df.query("`Accession` == @id")["mono_mass"].to_list()
 
     def id_to_composition(self, id):
+        """Get composition for a given id
+
+        Args:
+            name (str): id of the unimod
+
+        Returns:
+            list: list of compositions
+        """
         return self.df.query("`Accession` == @id")["elements"].to_list()
 
     def id_to_name(self, id):
+        """Get name for a given id
+
+        Args:
+            name (str): id of the unimod
+
+        Returns:
+            list: list of names
+        """
         return self.df.query("`Accession` == @id")["Name"].to_list()
 
     def _determine_mass_range(self, mass, decimals=0):
@@ -178,24 +245,58 @@ class UnimodMapper(object):
         return lower_mass, upper_mass
 
     def mass_to_ids(self, mass, decimals=0):
+        """Get ids for a given mass
+
+        Args:
+            name (str): mass of the unimod
+
+        Returns:
+            list: list of ids
+        """
         lower_mass, upper_mass = self._determine_mass_range(mass, decimals=decimals)
         return self.df.query("@lower_mass <= `mono_mass` <= @upper_mass")[
             "Accession"
         ].unique()
 
     def mass_to_compositions(self, mass, decimals=0):
+        """Get compositions for a given mass
+
+        Args:
+            name (float|int): mass of the unimod
+
+        Returns:
+            list: list of compositons
+        """
         lower_mass, upper_mass = self._determine_mass_range(mass, decimals=decimals)
         return self.df.query("@lower_mass <= `mono_mass` <= @upper_mass")[
             "elements"
         ].tolist()
 
     def mass_to_names(self, mass, decimals=0):
+        """Get names for a given mass
+
+        Args:
+            name (float|int): mass of the unimod
+
+        Returns:
+            list: list of names
+        """
         lower_mass, upper_mass = self._determine_mass_range(mass, decimals=decimals)
         return self.df.query("@lower_mass <= `mono_mass` <= @upper_mass")[
             "Name"
         ].unique()
 
     def mass_to_combos(self, mass, n=2, decimals=3):
+        """Generate all combos of length n rounded to `decimals` decimal places
+
+        Args:
+            mass (float|int): combined mass
+            n (int, optional): number of allowed mods to form the combined mass
+            decimals (int, optional): round to n decimal places
+
+        Returns:
+            list: list of tuples containing the combined and single masses
+        """
         if n not in self._combos.keys():
             self._combos[n] = self._generate_mass_combos(n=n)
 
@@ -213,6 +314,14 @@ class UnimodMapper(object):
         return self._combos[n][lower_index:upper_index]
 
     def _generate_mass_combos(self, n=2):
+        """Generate all mass combos of length n
+
+        Args:
+            n (int, optional): number of combinated mods
+
+        Returns:
+            list: list of tuples with combined and single masses
+        """
         mass_list = []
         for combo in itertools.combinations_with_replacement(
             self.df[["mono_mass", "Name"]].drop_duplicates().to_numpy(), 2
@@ -224,6 +333,14 @@ class UnimodMapper(object):
         return sorted(mass_list)
 
     def _extract_elements(self, element):
+        """Extract xml elements with the name 'element'.
+
+        Args:
+            element (xml.etree.ElementTree.Element): xml element
+
+        Returns:
+            dict: dict mapping symbol to number
+        """
         r_dict = {}
         for sub_element in element.iter():
             if sub_element.tag.endswith("}element"):
@@ -233,6 +350,11 @@ class UnimodMapper(object):
         return r_dict
 
     def _parse_in_more_detail_XML(self):
+        """Parse unimod xml.
+
+        Returns:
+            list: list of dicts with information regarding a unimod
+        """
         data_list = []
         for xml_path in self.unimod_xml_names:
             xml_path = Path(xml_path)
@@ -254,8 +376,6 @@ class UnimodMapper(object):
                             "Description": element.attrib.get("full_name", ""),
                             "elements": {},
                             "specificity": [],
-                            # "neutral_losses": [],
-                            # "neutral_losses_element": [],
                             "PSI-MS approved": False,
                         }
                         if element.attrib.get("approved", "0") == "1":
@@ -291,18 +411,9 @@ class UnimodMapper(object):
                                     neutral_loss_elements = self._extract_elements(
                                         sub_element
                                     )
-                                    # tmp["neutral_losses_element"].append(
-                                    #     (amino_acid, neutral_loss_elements)
-                                    # )
                                     neutral_loss_mass = float(
                                         sub_element.attrib["mono_mass"]
                                     )
-                                    # tmp["neutral_losses"].append(
-                                    #     (
-                                    #         amino_acid,
-                                    #         neutral_loss_mass,
-                                    #     )
-                                    # )
                         tmp["specificity"].append(
                             f"{amino_acid}<|>{classification}<|>{neutral_loss_elements}<|>{neutral_loss_mass}"
                         )
@@ -314,6 +425,11 @@ class UnimodMapper(object):
         return data_list
 
     def _parseXML(self, xml_file_list=None):
+        """Parse unimod xml.
+
+        Returns:
+            list: list of dicts with information regarding a unimod
+        """
         if xml_file_list is None:
             xml_file_list = []
         data_list = []
@@ -362,12 +478,6 @@ class UnimodMapper(object):
                                 amino_acid = tmp["specificity"][-1][0]
                                 neutral_loss = element.attrib["mono_mass"]
                                 tmp["neutral_loss"].append((amino_acid, neutral_loss))
-                        # elif element.tag.endswith("}NeutralLoss"):
-                        #     if element.attrib["composition"] != "0":
-                        #         site = tmp["specificity"][-1][0]
-                        #         tmp["neutral_loss"][site] = element.attrib["mono_mass"]
-                        # # else:
-                        #     pass
                     else:
                         # end element
                         if element.tag.endswith("}delta"):
@@ -391,7 +501,7 @@ class UnimodMapper(object):
         return data_list
 
     def _initialize_mapper(self):
-        """Set up the mapper and generate the index dict"""
+        """Set up the mapper and generate the index dict."""
         mapper = {}
         for index, unimod_data_dict in enumerate(self.data_list):
             if unimod_data_dict["unimodname"] in mapper.keys():
