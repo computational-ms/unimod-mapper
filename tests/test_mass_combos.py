@@ -42,7 +42,6 @@ def test_mass_to_combos_0_decimal():
     )
     combo_list = um.mass_to_combos(1, decimals=0)
     assert len(combo_list) == 6
-    breakpoint()
     # a = [
     #     (0.8, ["0.4", "0.4"]),
     #     (0.9, ["0.4", "0.5"]),
