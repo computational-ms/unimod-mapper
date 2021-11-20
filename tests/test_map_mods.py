@@ -1,4 +1,5 @@
 from unimod_mapper import UnimodMapper
+import numpy as np
 
 mod_dict = {
     "ufiles": "",
@@ -284,7 +285,7 @@ unimod_dict_with_nl = {
             "mass": 57.021464,
             "composition": {"H": 3, "C": 2, "N": 1, "O": 1},
             "id": "4",
-            "neutral_loss": [],
+            "neutral_loss": 0.0,
             "_id": 1,
             "org": {
                 "aa": "C",
@@ -302,7 +303,7 @@ unimod_dict_with_nl = {
             "mass": 57.021464,
             "composition": {"H": 3, "C": 2, "N": 1, "O": 1},
             "id": "4",
-            "neutral_loss": "105.024835",
+            "neutral_loss": 105.024835,
             "_id": 2,
             "org": {
                 "aa": "M",
@@ -449,9 +450,16 @@ def test_map_mods_mod_not_in_unimod_by_id():
 
 
 def test_map_mods_neutral_loss():
+    import pprint
+
+    pprint.pprint(mod_dict_nl["parameters"]["modifications"])
     _output = UnimodMapper().map_mods(
         mod_list=mod_dict_nl["parameters"]["modifications"]
     )
+    print("Output")
+    pprint.pprint(_output)
+    print("Expected")
+    pprint.pprint(unimod_dict_with_nl)
     assert _output == unimod_dict_with_nl
 
 
