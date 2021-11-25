@@ -372,7 +372,7 @@ class UnimodMapper(object):
                     if element.tag.endswith("}mod"):
                         tmp = {
                             "Name": element.attrib["title"],
-                            "Accession": str(element.attrib["record_id"]),
+                            "Accession": str(element.attrib.get("record_id", "")),
                             "Description": element.attrib.get("full_name", ""),
                             "elements": {},
                             "specificity": [],
