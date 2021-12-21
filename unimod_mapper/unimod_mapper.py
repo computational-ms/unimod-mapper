@@ -142,7 +142,7 @@ class UnimodMapper(object):
             self._df.drop(columns=["specificity"], inplace=True)
             self._df = self._df.join(sites)
             self._df.neutral_losses.fillna(0, inplace=True)
-            self._df = self._df.convert_dtypes()
+            self._df = self._df.convert_dtypes(convert_floating=False)
             self._df.neutral_losses = self._df.neutral_losses.astype(float)
         return self._df
 
