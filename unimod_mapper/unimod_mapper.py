@@ -28,6 +28,7 @@ import numpy as np
 import itertools
 import pandas as pd
 
+from chemical_composition import ChemicalComposition
 
 from pathlib import Path
 from loguru import logger
