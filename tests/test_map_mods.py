@@ -475,3 +475,18 @@ def test_map_mods_name_and_wrong_id():
         mod_list=mod_dict_name_wrong_id["parameters"]["modifications"]
     )
     assert _output == unimod_dict_name_wrong_id
+
+
+def test_map_TMTpro18():
+    mapper = UnimodMapper()
+    mapped = mapper.mass_to_names(304.207146, decimals=4)  # starts working from 3 on
+    assert list(mapped) == ["TMTpro"]
+
+
+def test_map_all_masses():
+    mapper = UnimodMapper()
+    for mod_dict in mapper.data_list:
+        mono_mass = mod_dict["mono_mass"]
+        name = mod_dict["unimodname"]
+        mapped_name = mapper.mass_to_names(mono_mass, decimals=5)
+        assert name == list(mapped_name)

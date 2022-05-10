@@ -239,13 +239,13 @@ class UnimodMapper(object):
         """
         return self.df.query("`Accession` == @id")["Name"].to_list()
 
-    def _determine_mass_range(self, mass, decimals=0):
+    def _determine_mass_range(self, mass, decimals=5):
         fraction = 1 / 10 ** (decimals + 1)
         lower_mass = mass - 5 * fraction
         upper_mass = mass + 4 * fraction
         return lower_mass, upper_mass
 
-    def mass_to_ids(self, mass, decimals=0):
+    def mass_to_ids(self, mass, decimals=5):
         """Get ids for a given mass
 
         Args:
@@ -259,7 +259,7 @@ class UnimodMapper(object):
             "Accession"
         ].unique()
 
-    def mass_to_compositions(self, mass, decimals=0):
+    def mass_to_compositions(self, mass, decimals=5):
         """Get compositions for a given mass
 
         Args:
@@ -273,7 +273,7 @@ class UnimodMapper(object):
             "elements"
         ].tolist()
 
-    def mass_to_names(self, mass, decimals=0):
+    def mass_to_names(self, mass, decimals=5):
         """Get names for a given mass
 
         Args:
@@ -287,7 +287,7 @@ class UnimodMapper(object):
             "Name"
         ].unique()
 
-    def mass_to_combos(self, mass, n=2, decimals=3):
+    def mass_to_combos(self, mass, n=2, decimals=5):
         """Generate all combos of length n rounded to `decimals` decimal places
 
         Args:
@@ -371,6 +371,8 @@ class UnimodMapper(object):
             for event, element in unimodXML:
                 if event == b"start":
                     if element.tag.endswith("}mod"):
+                        if "blub" in element.attrib["title"]:
+                            breakpoint()
                         tmp = {
                             "Name": element.attrib["title"],
                             "Accession": str(element.attrib.get("record_id", "")),
@@ -1042,7 +1044,7 @@ class UnimodMapper(object):
         return mass_2_return
 
     @deprecated
-    def _appMass2whatever(self, mass, decimal_places=2, entry_key=None):
+    def _appMass2whatever(self, mass, decimal_places=5, entry_key=None):
         return_list = []
         for entry in self.data_list:
             umass = entry["mono_mass"]
