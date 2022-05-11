@@ -272,7 +272,7 @@ MULTIFILE_TESTS = [
     },
     {
         "order": [unimod_path, usermod_path],
-        "entries": 1519,
+        "entries": 1529,
         "excluded": [
             {"in": "TMTpro", "out": ["2016", ""]},
             {"in": "SILAC K+6 TMT", "out": [""]},
@@ -286,7 +286,7 @@ MULTIFILE_TESTS = [
     },
     {
         "order": [usermod_path, unimod_path],
-        "entries": 1519,
+        "entries": 1529,
         "excluded": [
             {"in": "TMTpro", "out": ["", "2016"]},
             {"in": "SILAC K+6 TMT", "out": [""]},

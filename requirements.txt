@@ -3,3 +3,4 @@ requests
 loguru
 pandas
 numpy
+chemical-composition
