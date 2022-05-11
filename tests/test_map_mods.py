@@ -483,10 +483,37 @@ def test_map_TMTpro18():
     assert list(mapped) == ["TMTpro"]
 
 
-def test_map_all_masses():
+# def test_map_all_masses():
+#     mapper = UnimodMapper()
+#     for mod_dict in mapper.data_list:
+#         mono_mass = mod_dict["mono_mass"]
+#         name = mod_dict["unimodname"]
+#         mapped_name = mapper.mass_to_names(mono_mass, decimals=5)
+#         assert name in list(mapped_name)
+
+
+def test_map_mod_chemical_composition():
     mapper = UnimodMapper()
-    for mod_dict in mapper.data_list:
-        mono_mass = mod_dict["mono_mass"]
-        name = mod_dict["unimodname"]
-        mapped_name = mapper.mass_to_names(mono_mass, decimals=5)
-        assert name in list(mapped_name)
+    mod_list = [
+        {
+            "aa": "M",  # specify the modified amino acid as a single letter, use '*' if the amino acid is variable
+            "type": "opt",  # specify if it is a fixed (fix) or potential (opt) modification
+            "position": "any",  # specify the position within the protein/peptide (Prot-N-term, Prot-C-term), use 'any' if the positon is variable
+            "name": "Oxidation",  # specify the unimod PSI-MS Name (alternative to id)
+            "id": None,  # specify the unimod Accession (alternative to name)
+            "composition": None,  # For user-defined mods composition needs to be given as a Hill notation
+        },
+        {
+            "aa": "T",
+            "type": "fix",
+            "name": "Acetyl",
+        },
+    ]
+    # print(mapper.df.loc[0])
+
+    rdict = mapper.map_mods(mod_list)
+    # print(rdict)
+    # assert 2 == 1
+    assert rdict["opt"][0]["composition"] == {"O": 1}
+    assert rdict["fix"][0]["composition"] == {"C": 2, "H": 2, "O": 1}
+    assert rdict["fix"][0]["name"] == "Acetyl"
