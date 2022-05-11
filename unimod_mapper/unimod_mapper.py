@@ -371,8 +371,6 @@ class UnimodMapper(object):
             for event, element in unimodXML:
                 if event == b"start":
                     if element.tag.endswith("}mod"):
-                        if "blub" in element.attrib["title"]:
-                            breakpoint()
                         tmp = {
                             "Name": element.attrib["title"],
                             "Accession": str(element.attrib.get("record_id", "")),
