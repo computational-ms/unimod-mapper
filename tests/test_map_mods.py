@@ -489,4 +489,4 @@ def test_map_all_masses():
         mono_mass = mod_dict["mono_mass"]
         name = mod_dict["unimodname"]
         mapped_name = mapper.mass_to_names(mono_mass, decimals=5)
-        assert name == list(mapped_name)
+        assert name in list(mapped_name)
