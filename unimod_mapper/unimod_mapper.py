@@ -1199,7 +1199,7 @@ class UnimodMapper(object):
                     "position": "any",      # specify the position within the protein/peptide (Prot-N-term, Prot-C-term), use 'any' if the positon is variable
                     "name": "Oxidation",    # specify the unimod PSI-MS Name (alternative to id)
                     "id": None,             # specify the unimod Accession (alternative to name)
-                    "composition": None,    # For user-defined mods composition needs to be given as a Hill notation
+                    "composition": None,    # For user-defined mods composition needs to be given as dict (e.g.: {"H":2, "O":1})
                 }
             ]
 
@@ -1291,18 +1291,10 @@ class UnimodMapper(object):
                     break
             else:
                 unimod_name = mod_dict["name"]
-                chemical_formula = mod_dict["composition"]
-                # composition_unimod_style = chemical_formula
-                cc_string = "+" + "".join(
-                    ["{0}:{1}".format(k, v) for k, v in mod_dict["composition"].items()]
-                )
-                chemical_composition = ChemicalComposition()
-                chemical_composition.use(formula=cc_string)
-                composition = chemical_composition
-                composition_unimod_style = chemical_composition.hill_notation_unimod()
-                unimod_name_list = self.composition_to_names(chemical_formula)
-                unimod_id_list = self.composition_to_ids(chemical_formula)
-                mass = self.composition_to_mass(chemical_formula)
+                user_chemical_formula = mod_dict["composition"]
+                unimod_name_list = self.composition_to_names(user_chemical_formula)
+                unimod_id_list = self.composition_to_ids(user_chemical_formula)
+                mass = self.composition_to_mass(user_chemical_formula)
                 for i, name in enumerate(unimod_name_list):
                     if name == unimod_name:
                         unimod_id = unimod_id_list[i]
@@ -1321,6 +1313,14 @@ class UnimodMapper(object):
                             mod,
                         )
                     )
+                    cc_string = "+" + "".join(
+                        [
+                            "{0}({1})".format(k, v)
+                            for k, v in user_chemical_formula.items()
+                        ]
+                    )
+                    chemical_composition = ChemicalComposition()
+                    chemical_composition.use(formula=cc_string)
                     mass = chemical_composition.mass()
 
             neutral_loss = []
@@ -1336,7 +1336,7 @@ class UnimodMapper(object):
                 "name": unimod_name,
                 "id": unimod_id,
                 "mass": mass,
-                "composition": composition,
+                "composition": user_chemical_formula,
                 "neutral_loss": neutral_loss,
             }
 
