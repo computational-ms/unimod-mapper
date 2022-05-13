@@ -1291,10 +1291,10 @@ class UnimodMapper(object):
                     break
             else:
                 unimod_name = mod_dict["name"]
-                user_chemical_formula = mod_dict["composition"]
-                unimod_name_list = self.composition_to_names(user_chemical_formula)
-                unimod_id_list = self.composition_to_ids(user_chemical_formula)
-                mass = self.composition_to_mass(user_chemical_formula)
+                composition = mod_dict["composition"]
+                unimod_name_list = self.composition_to_names(composition)
+                unimod_id_list = self.composition_to_ids(composition)
+                mass = self.composition_to_mass(composition)
                 for i, name in enumerate(unimod_name_list):
                     if name == unimod_name:
                         unimod_id = unimod_id_list[i]
@@ -1314,10 +1314,7 @@ class UnimodMapper(object):
                         )
                     )
                     cc_string = "+" + "".join(
-                        [
-                            "{0}({1})".format(k, v)
-                            for k, v in user_chemical_formula.items()
-                        ]
+                        ["{0}({1})".format(k, v) for k, v in composition.items()]
                     )
                     chemical_composition = ChemicalComposition()
                     chemical_composition.use(formula=cc_string)
@@ -1336,7 +1333,7 @@ class UnimodMapper(object):
                 "name": unimod_name,
                 "id": unimod_id,
                 "mass": mass,
-                "composition": user_chemical_formula,
+                "composition": composition,
                 "neutral_loss": neutral_loss,
             }
 
