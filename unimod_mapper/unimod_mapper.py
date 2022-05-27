@@ -28,8 +28,6 @@ import numpy as np
 import itertools
 import pandas as pd
 
-from chemical_composition import ChemicalComposition
-
 from pathlib import Path
 from loguru import logger
 
@@ -1181,6 +1179,10 @@ class UnimodMapper(object):
         dict format for the mods, the dict can be adjusted depending on the purpose of
         the mapping. Moreover, it can have the minimal amount of items (i.e.: engine-specific ones).
         At the end the mapped values will be updated to the original dict.
+        Note:
+            Provided compositions are only accepted if they don't exist in the given unimod file already (or if the provided name fits as well).
+            In general, if name and id are given, the modification will be chosen based on the name, not the id.
+            If a unimod entry has an interim name and PSI-MS name, only the PSI-MS name will be accepted (but interim names are accepted if no PSI-MS name exists for that entry).
 
         Args:
             mod_list (list): list of mod_dicts containing all relevant info about a
@@ -1313,6 +1315,8 @@ class UnimodMapper(object):
                             mod,
                         )
                     )
+                    from chemical_composition import ChemicalComposition
+
                     cc_string = "+" + "".join(
                         ["{0}({1})".format(k, v) for k, v in composition.items()]
                     )
