@@ -314,6 +314,49 @@ class UnimodMapper(object):
         )
         return self._combos[n][lower_index:upper_index]
 
+    def composition_to_names(self, composition):
+        """Get names for a given composition
+
+        Args:
+            composition (dict): chemical composition dict
+
+        Returns:
+            list: list of names
+        """
+        composition = dict(sorted(list(composition.items())))
+        return list(self.df.query("`elements` == @composition")["Name"].unique())
+
+    def composition_to_ids(self, composition):
+        """Get ids for a given composition
+
+        Args:
+            composition (dict): chemical composition dict
+
+        Returns:
+            list: list of ids
+        """
+        composition = dict(sorted(list(composition.items())))
+        return list(self.df.query("`elements` == @composition")["Accession"].unique())
+
+    def composition_to_mass(self, composition):
+        """Get mass for a given composition
+
+        Args:
+            composition (dict): chemical composition dict
+
+        Returns:
+            float: mass
+        """
+        composition = dict(sorted(list(composition.items())))
+        masses = list(self.df.query("`elements` == @composition")["mono_mass"].unique())
+        if len(masses) > 1:
+            print(f"The Composition {composition} points to {masses} - Seriously!!")
+            raise TypeError("We seriously have a problem with this XML")
+        elif len(masses) == 0:
+            return None
+        else:
+            return masses[0]
+
     def _generate_mass_combos(self, n=2):
         """Generate all mass combos of length n
 
@@ -348,6 +391,7 @@ class UnimodMapper(object):
                 number = int(sub_element.attrib["number"])
                 if number != 0:
                     r_dict[sub_element.attrib["symbol"]] = number
+        r_dict = dict(sorted(list(r_dict.items())))
         return r_dict
 
     def _parse_in_more_detail_XML(self):
@@ -1155,7 +1199,7 @@ class UnimodMapper(object):
                     "position": "any",      # specify the position within the protein/peptide (Prot-N-term, Prot-C-term), use 'any' if the positon is variable
                     "name": "Oxidation",    # specify the unimod PSI-MS Name (alternative to id)
                     "id": None,             # specify the unimod Accession (alternative to name)
-                    "composition": None,    # For user-defined mods composition needs to be given as a Hill notation
+                    "composition": None,    # For user-defined mods composition needs to be given as dict (e.g.: {"H":2, "O":1})
                 }
             ]
 
@@ -1247,14 +1291,10 @@ class UnimodMapper(object):
                     break
             else:
                 unimod_name = mod_dict["name"]
-                chemical_formula = mod_dict["composition"]
-                chemical_composition = ChemicalComposition()
-                chemical_composition.use(formula=chemical_formula)
-                composition = chemical_composition
-                composition_unimod_style = chemical_composition.hill_notation_unimod()
-                unimod_name_list = self.composition_to_name(composition_unimod_style)
-                unimod_id_list = self.composition_to_id(composition_unimod_style)
-                mass = self.composition_to_mass(composition_unimod_style)
+                composition = mod_dict["composition"]
+                unimod_name_list = self.composition_to_names(composition)
+                unimod_id_list = self.composition_to_ids(composition)
+                mass = self.composition_to_mass(composition)
                 for i, name in enumerate(unimod_name_list):
                     if name == unimod_name:
                         unimod_id = unimod_id_list[i]
@@ -1273,6 +1313,11 @@ class UnimodMapper(object):
                             mod,
                         )
                     )
+                    cc_string = "+" + "".join(
+                        ["{0}({1})".format(k, v) for k, v in composition.items()]
+                    )
+                    chemical_composition = ChemicalComposition()
+                    chemical_composition.use(formula=cc_string)
                     mass = chemical_composition.mass()
 
             neutral_loss = []

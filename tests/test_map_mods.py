@@ -483,10 +483,148 @@ def test_map_TMTpro18():
     assert list(mapped) == ["TMTpro"]
 
 
-def test_map_all_masses():
+def test_map_composition_to_names():
     mapper = UnimodMapper()
-    for mod_dict in mapper.data_list:
-        mono_mass = mod_dict["mono_mass"]
-        name = mod_dict["unimodname"]
-        mapped_name = mapper.mass_to_names(mono_mass, decimals=5)
-        assert name in list(mapped_name)
+    mapped = mapper.composition_to_names({"C": 1, "O": 1})
+    assert list(mapped) == ["Formyl", "Ser->Asp", "Thr->Glu"]
+
+
+def test_map_composition_to_ids():
+    mapper = UnimodMapper()
+    mapped = mapper.composition_to_ids({"C": 1, "O": 1})
+    assert list(mapped) == ["122", "1196", "1205"]
+
+
+# def test_map_all_masses():
+#     mapper = UnimodMapper()
+#     for mod_dict in mapper.data_list:
+#         mono_mass = mod_dict["mono_mass"]
+#         name = mod_dict["unimodname"]
+#         mapped_name = mapper.mass_to_names(mono_mass, decimals=5)
+#         assert name in list(mapped_name)
+
+
+def test_map_mod_chemical_composition():
+    mapper = UnimodMapper()
+    mod_list = [
+        {
+            "aa": "M",  # specify the modified amino acid as a single letter, use '*' if the amino acid is variable
+            "type": "opt",  # specify if it is a fixed (fix) or potential (opt) modification
+            "position": "any",  # specify the position within the protein/peptide (Prot-N-term, Prot-C-term), use 'any' if the positon is variable
+            "name": "Oxidation",  # specify the unimod PSI-MS Name (alternative to id)
+            "id": None,  # specify the unimod Accession (alternative to name)
+            "composition": None,  # For user-defined mods composition needs to be given as a Hill notation
+        },
+        {
+            "aa": "T",
+            "type": "fix",
+            "name": "Acetyl",
+        },
+    ]
+
+    rdict = mapper.map_mods(mod_list)
+
+    assert rdict["opt"][0]["composition"] == {"O": 1}
+    assert rdict["fix"][0]["composition"] == {"C": 2, "H": 2, "O": 1}
+    assert rdict["fix"][0]["id"] == "1"
+
+
+def test_map_mod_userdefined_compositions():
+    mapper = UnimodMapper()
+    mod_list = [
+        {
+            "aa": "M",  # specify the modified amino acid as a single letter, use '*' if the amino acid is variable
+            "type": "opt",  # specify if it is a fixed (fix) or potential (opt) modification
+            "position": "any",  # specify the position within the protein/peptide (Prot-N-term, Prot-C-term), use 'any' if the positon is variable
+            "name": "TheOneAndOnly",  # specify the unimod PSI-MS Name (alternative to id)
+            "composition": {
+                "H": 2,
+                "O": 1,
+            },  # For user-defined mods composition needs to be given as a Hill notation
+        },
+    ]
+
+    rdict = mapper.map_mods(mod_list)
+    assert (
+        len(rdict["opt"]) == 0
+    )  # cause the name is not a unimod mod, but the composition exists already
+
+    mod_list = [
+        {
+            "aa": "M",  # specify the modified amino acid as a single letter, use '*' if the amino acid is variable
+            "type": "opt",  # specify if it is a fixed (fix) or potential (opt) modification
+            "position": "any",  # specify the position within the protein/peptide (Prot-N-term, Prot-C-term), use 'any' if the positon is variable
+            "name": "TheOneAndOnly",  # specify the unimod PSI-MS Name (alternative to id)
+            "composition": {
+                "H": 222,
+                "O": 111,
+            },  # For user-defined mods composition needs to be given as a Hill notation
+        },
+    ]
+
+    rdict = mapper.map_mods(mod_list)
+
+    assert rdict["opt"][0]["composition"] == {"H": 222, "O": 111}
+    assert rdict["opt"][0]["name"] == "TheOneAndOnly"
+
+
+def test_map_mod_chemical_composition_fails():
+    mapper = UnimodMapper()
+
+    # Using PSI-MS name works
+    mod_list = [
+        {
+            "aa": "N",
+            "type": "opt",
+            "name": "Ammonia-loss",
+        },
+    ]
+    rdict = mapper.map_mods(mod_list)
+    assert rdict["opt"][0]["name"] == "Ammonia-loss"
+
+    # Using Interim name for same ID doesn't work
+    mod_list = [
+        {
+            "aa": "D",
+            "type": "opt",
+            "name": "N-oxobutanoic",
+        },
+    ]
+    rdict = mapper.map_mods(mod_list)
+    assert len(rdict["opt"]) == 0
+
+    # Using Interim name and ID doesn't work (cause name is checked first)
+    # But using a wrong ID but correct name works (see test_map_mods_name_and_wrong_id)
+    # Seems inconsistent
+    mod_list = [
+        {
+            "aa": "D",
+            "type": "opt",
+            "name": "N-oxobutanoic",
+            "id": 385,
+        },
+    ]
+    rdict = mapper.map_mods(mod_list)
+    assert len(rdict["opt"]) == 0
+
+    # Using just ID works
+    mod_list = [
+        {
+            "aa": "D",
+            "type": "opt",
+            "id": 385,
+        },
+    ]
+    rdict = mapper.map_mods(mod_list)
+    assert rdict["opt"][0]["name"] == "Ammonia-loss"
+
+    # Using Interim name if PSI MS name doesn't exist works
+    mod_list = [
+        {
+            "aa": "S",
+            "type": "opt",
+            "name": "Galactosyl",
+        },
+    ]
+    rdict = mapper.map_mods(mod_list)
+    assert rdict["opt"][0]["composition"] == {"C": 6, "H": 10, "O": 6}
