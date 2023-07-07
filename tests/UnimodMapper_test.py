@@ -333,6 +333,7 @@ class TestXMLIntegrity:
             um = unimod_mapper.UnimodMapper(
                 xml_file_list=data["order"], add_default_files=False
             )
+            # Does this control for a changing unimod.xml?
             assert len(um.data_list) == data["entries"]
             for case in data["excluded"]:
                 assert case["out"] == um.name2id_list(case["in"])
