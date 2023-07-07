@@ -630,7 +630,7 @@ def test_map_mod_chemical_composition_fails():
     assert rdict["opt"][0]["composition"] == {"C": 6, "H": 10, "O": 6}
 
 
-def test_read_mapped_mods(self):
+def test_read_mapped_mods():
     mapper = UnimodMapper()
 
     mod_list = [
