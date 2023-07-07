@@ -1189,7 +1189,7 @@ class UnimodMapper(object):
             for m in mapped_mods[mod_type]:
                 mod_list.append(m)
         df = pd.DataFrame(mod_list)
-        df = df.rename(columns={"_id": "Accession"})
+        df = df.rename(columns={"id": "Accession"})
         df = df.rename(columns={"mass": "mono_mass"})
         df = df.rename(columns={"composition": "elements"})
         df = df.rename(columns={"name": "Name"})
