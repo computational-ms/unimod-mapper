@@ -368,7 +368,6 @@ class UnimodMapper(object):
         for combo in itertools.combinations_with_replacement(
             self.df[["mono_mass", "Name"]].drop_duplicates().to_numpy(), 2
         ):
-
             combo_mass = np.sum(np.fromiter((c[0] for c in combo), float))
             combo_name = [c[1] for c in combo]
             mass_list.append((combo_mass, combo_name))
@@ -450,7 +449,6 @@ class UnimodMapper(object):
                                     sub_element.tag.endswith("}NeutralLoss")
                                     and len(sub_element) > 0
                                 ):
-
                                     neutral_loss_elements = self._extract_elements(
                                         sub_element
                                     )
@@ -1173,6 +1171,31 @@ class UnimodMapper(object):
         self._data_list = self._parseXML(xml_file_list=xml_file_list)
         self._mapper = self._initialize_mapper()
 
+    def read_mapped_mods_as_df(self, mapped_mods):
+        """
+        Read in results (rdict) of the map_mods function and turn them into a pandas data frame.
+        This allows for using the mapping functions without requiring modifications to be part
+        of the xml files.
+
+        Args:
+            mapped_mods (dict): dictionary that is returned by the mapped_mods function
+
+        Returns:
+            df (pandas data frame): pandas data frame containing all modifications used as input.
+                                    Importantly, this df replaces self._df as well!
+        """
+        mod_list = []
+        for mod_type in ["fix", "opt"]:
+            for m in mapped_mods[mod_type]:
+                mod_list.append(m)
+        df = pd.DataFrame(mod_list)
+        df = df.rename(columns={"_id": "Accession"})
+        df = df.rename(columns={"mass": "mono_mass"})
+        df = df.rename(columns={"composition": "elements"})
+        df = df.rename(columns={"name": "Name"})
+        self._df = df
+        return df
+
     def map_mods(self, mod_list):
         """
         Maps modifications defined in params["modification"] using unimods or user-defined modifications. Using the
@@ -1209,7 +1232,6 @@ class UnimodMapper(object):
 
         rdict = {"fix": [], "opt": []}
         for index, mod in enumerate(mod_list):
-
             # Generate a default mod_dict with minimal required keys
 
             mod_dict = {
@@ -1326,7 +1348,6 @@ class UnimodMapper(object):
 
             neutral_loss = []
             if mod_dict["neutral_loss"] == "unimod":
-
                 for nl_item in self.name_to_neutral_loss(unimod_name):
                     if nl_item[0] == mod_dict["aa"]:
                         neutral_loss.append(nl_item[1])
