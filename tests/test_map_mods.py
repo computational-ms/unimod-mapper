@@ -628,3 +628,32 @@ def test_map_mod_chemical_composition_fails():
     ]
     rdict = mapper.map_mods(mod_list)
     assert rdict["opt"][0]["composition"] == {"C": 6, "H": 10, "O": 6}
+
+
+def test_read_mapped_mods():
+    mapper = UnimodMapper()
+
+    mod_list = [
+        {
+            "aa": "M",
+            "type": "opt",
+            "position": "any",
+            "name": "Oxidation",
+        },
+        {
+            "aa": "C",
+            "type": "fix",
+            "position": "any",
+            "name": "Carbamidomethyl",
+        },
+        {
+            "aa": "*",
+            "type": "opt",
+            "position": "Prot-N-term",
+            "name": "Acetyl",
+        },
+    ]
+    rdict = mapper.map_mods(mod_list)
+    df = mapper.read_mapped_mods_as_df(rdict)
+    assert len(df) == 3
+    assert df["Accession"].to_list() == ["4", "35", "1"]

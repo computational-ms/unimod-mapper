@@ -19,7 +19,11 @@ test_dir = Path(__file__).parent
 # package_dir = test_dir.parent
 
 unimod_path = package_dir.joinpath("unimod.xml")
+M = unimod_mapper.UnimodMapper(xml_file_list=[unimod_path])
+unimod_len = len(M.data_list)
 usermod_path = test_dir.joinpath("usermod.xml")
+M = unimod_mapper.UnimodMapper(xml_file_list=[usermod_path], add_default_files=False)
+usermod_len = len(M.data_list)
 M = unimod_mapper.UnimodMapper(xml_file_list=[unimod_path, usermod_path, unimod_path])
 
 CONVERSIONS = [
@@ -258,7 +262,7 @@ CONVERSIONS = [
 MULTIFILE_TESTS = [
     {
         "order": [usermod_path],
-        "entries": 20,
+        "entries": usermod_len,
         "excluded": [
             {"in": "TMTpro", "out": [""]},
             {"in": "SILAC K+6 TMT", "out": [""]},
@@ -272,7 +276,7 @@ MULTIFILE_TESTS = [
     },
     {
         "order": [unimod_path, usermod_path],
-        "entries": 1529,
+        "entries": unimod_len + usermod_len,
         "excluded": [
             {"in": "TMTpro", "out": ["2016", ""]},
             {"in": "SILAC K+6 TMT", "out": [""]},
@@ -286,7 +290,7 @@ MULTIFILE_TESTS = [
     },
     {
         "order": [usermod_path, unimod_path],
-        "entries": 1529,
+        "entries": unimod_len + usermod_len,
         "excluded": [
             {"in": "TMTpro", "out": ["", "2016"]},
             {"in": "SILAC K+6 TMT", "out": [""]},
